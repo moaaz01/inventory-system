@@ -1,0 +1,78 @@
+project:
+  name: "نظام إدارة المخزون"
+  slug: "inventory-system"
+  type: "inventory"
+  complexity: "MEDIUM"
+  status: "building"
+  created: "2026-03-22"
+  client: "intern"
+  language: "ar"
+
+tech_stack:
+  android:
+    kotlin: "2.0"
+    compose_bom: "2024.12.01"
+    min_sdk: 24
+    package_name: "com.inventory.system"
+  backend:
+    framework: "fastapi"
+    database: "postgresql"
+    port: 8000
+    orm: "sqlalchemy"
+    migrations: "alembic"
+  admin:
+    framework: "nextjs"
+    port: 3000
+
+features:
+  # المخزون
+  - عرض كل المنتجات/الصنف
+  - إضافة صنف جديد
+  - تعديل بيانات الصنف
+  - حذف صنف
+  - البحث والفلترة
+  - تتبع الكميات (stock count)
+  - تنبيه الكمية الدنيا (low stock alert)
+
+  # العمليات
+  - استلام مخزون (stock receipt)
+  - صرف مخزون (stock issue)
+  - نقل بين المستودعات
+
+  # التصنيفات
+  - تصنيفات المنتجات
+  - الوحدات (piece, kg, box, etc)
+
+  # المستودعات
+  - إدارة المستودعات (مستودع 1، مستودع 2...)
+  - تتبع الموقع داخل المستودع
+
+  # التقارير
+  - تقرير المخزون الحالي
+  - تقرير الحركات (receipt/issue history)
+  - تقرير low-stock items
+
+  # المستخدمين
+  - تسجيل دخول / تسجيل
+  - صلاحيات (admin, user)
+
+  # Dashboard
+  - نظرة عامة (إحصائيات)
+  - إدارة المنتجات
+  - إدارة المستودعات
+  - إدارة العمليات
+  - التقارير
+
+integrations:
+  - JWT Authentication
+  - Role-based access control (RBAC)
+
+build_info:
+  version_name: "1.0.0"
+  version_code: 1
+  debug_apk: "~/projects/inventory-system/releases/inventory-system-debug.apk"
+  release_apk: "~/projects/inventory-system/releases/inventory-system-release.apk"
+
+security:
+  last_scan: null
+  result: null
