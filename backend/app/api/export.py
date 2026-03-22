@@ -25,8 +25,13 @@ def export_products(db: Session = Depends(get_db), _: User = Depends(get_current
     for p in products:
         writer.writerow([p.id, p.sku, p.name, p.category_id, p.unit_id, p.min_stock_level, p.barcode or "", p.description or ""])
     output.seek(0)
-    return StreamingResponse(iter([output.getvalue()]), media_type="text/csv",
-                             headers={"Content-Disposition": "attachment; filename=products.csv"})
+    # UTF-8 with BOM for Excel Arabic support
+    content = "\ufeff" + output.getvalue()
+    return StreamingResponse(
+        iter([content.encode("utf-8-sig")]),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": "attachment; filename=products.csv"}
+    )
 
 
 @router.get("/api/export/warehouses")
@@ -38,8 +43,12 @@ def export_warehouses(db: Session = Depends(get_db), _: User = Depends(get_curre
     for w in warehouses:
         writer.writerow([w.id, w.name, w.location or "", w.manager_id or ""])
     output.seek(0)
-    return StreamingResponse(iter([output.getvalue()]), media_type="text/csv",
-                             headers={"Content-Disposition": "attachment; filename=warehouses.csv"})
+    content = "\ufeff" + output.getvalue()
+    return StreamingResponse(
+        iter([content.encode("utf-8-sig")]),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": "attachment; filename=warehouses.csv"}
+    )
 
 
 @router.get("/api/export/stock")
@@ -51,8 +60,12 @@ def export_stock(db: Session = Depends(get_db), _: User = Depends(get_current_us
     for s in stocks:
         writer.writerow([s.id, s.product_id, s.warehouse_id, s.quantity])
     output.seek(0)
-    return StreamingResponse(iter([output.getvalue()]), media_type="text/csv",
-                             headers={"Content-Disposition": "attachment; filename=stock.csv"})
+    content = "\ufeff" + output.getvalue()
+    return StreamingResponse(
+        iter([content.encode("utf-8-sig")]),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": "attachment; filename=stock.csv"}
+    )
 
 
 @router.get("/api/export/all")
@@ -62,7 +75,8 @@ def export_all(db: Session = Depends(get_db), _: User = Depends(get_current_user
         writer = csv.writer(buf)
         writer.writerow(headers)
         writer.writerows(rows)
-        return buf.getvalue().encode()
+        # UTF-8 with BOM for Arabic
+        return ("\ufeff" + buf.getvalue()).encode("utf-8-sig")
 
     products_csv = make_csv_bytes(
         [[p.id, p.sku, p.name, p.category_id, p.unit_id, p.min_stock_level, p.barcode or "", p.description or ""]

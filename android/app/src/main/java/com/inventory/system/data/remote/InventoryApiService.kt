@@ -119,12 +119,9 @@ interface InventoryApiService {
     @GET("api/dashboard/stats")
     suspend fun getDashboardStats(): DashboardStatsDto
 
-    // All products (no paging) for dropdowns
-    @GET("api/products")
-    suspend fun getAllProducts(
-        @Query("page") page: Int = 1,
-        @Query("size") size: Int = 9999
-    ): PaginatedResponse<ProductDto>
+    // All products (no paging) for dropdowns - uses /api/products/all
+    @GET("api/products/all")
+    suspend fun getAllProducts(): List<ProductDto>
 
     // Export
     @GET("api/export/products")

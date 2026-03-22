@@ -22,6 +22,7 @@ interface ProductRepository {
     suspend fun deleteProduct(id: Int): Result<Unit>
     fun getCachedProducts(): Flow<List<Product>>
     suspend fun getProductBySku(sku: String): Product?
+    suspend fun searchProducts(query: String): Result<List<Product>>
 }
 
 interface CategoryRepository {

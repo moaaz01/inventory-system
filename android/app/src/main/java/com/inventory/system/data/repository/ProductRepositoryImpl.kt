@@ -48,14 +48,35 @@ class ProductRepositoryImpl @Inject constructor(
     }
 
     override suspend fun fetchAllProducts(): Result<List<Product>> = safeApiCall {
-        val response = api.getAllProducts(page = 1, size = 9999)
-        val products = response.items.map { it.toDomain() }
-        productDao.upsertAll(response.items.map { it.toEntity() })
+        val dtos = api.getAllProducts()
+        val products = dtos.map { it.toDomain() }
+        productDao.upsertAll(dtos.map { it.toEntity() })
         products
     }
 
     override suspend fun getProductBySku(sku: String): Product? {
-        return productDao.getProductBySku(sku)?.toDomain()
+        // Try local cache first
+        val cached = productDao.getProductBySku(sku)?.toDomain()
+        if (cached != null) return cached
+        // Try network search as fallback
+        val searchResult = safeApiCall {
+            api.getProducts(search = sku, categoryId = null, page = 1, size = 10)
+        }
+        if (searchResult is Result.Success) {
+            val found = searchResult.data.items.firstOrNull()
+            if (found != null) {
+                productDao.upsert(found.toEntity())
+                return found.toDomain()
+            }
+        }
+        return null
+    }
+
+    override suspend fun searchProducts(query: String): Result<List<Product>> = safeApiCall {
+        val response = api.getProducts(search = query, categoryId = null, page = 1, size = 20)
+        val products = response.items.map { it.toDomain() }
+        productDao.upsertAll(response.items.map { it.toEntity() })
+        products
     }
 
     override fun getCachedProducts(): Flow<List<Product>> =
