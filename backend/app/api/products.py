@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from typing import Optional
 from app.database import get_db
 from app.models.product import Product
@@ -31,6 +32,19 @@ def enrich_product(p: Product) -> ProductResponse:
         category_name=p.category.name if p.category else None,
         unit_name=p.unit.name if p.unit else None,
     )
+
+
+@router.get("/search", response_model=list[ProductResponse])
+def search_products(
+    q: str = Query(..., min_length=1),
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
+    """Search products by name or SKU - for autocomplete dropdowns."""
+    items = db.query(Product).filter(
+        or_(Product.name.ilike(f"%{q}%"), Product.sku.ilike(f"%{q}%"))
+    ).limit(20).all()
+    return [enrich_product(p) for p in items]
 
 
 @router.get("/all", response_model=list[ProductResponse])
