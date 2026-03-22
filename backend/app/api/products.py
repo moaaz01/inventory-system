@@ -15,9 +15,22 @@ def enrich_product(p: Product) -> ProductResponse:
         StockInfo(warehouse_id=s.warehouse_id, warehouse_name=s.warehouse.name, quantity=s.quantity)
         for s in p.stock
     ]
-    resp = ProductResponse.model_validate(p)
-    resp.stock = stock_info
-    return resp
+    return ProductResponse(
+        id=p.id,
+        sku=p.sku,
+        name=p.name,
+        description=p.description,
+        category_id=p.category_id,
+        unit_id=p.unit_id,
+        min_stock_level=p.min_stock_level,
+        barcode=p.barcode,
+        image_url=p.image_url,
+        created_at=p.created_at,
+        updated_at=p.updated_at,
+        stock=stock_info,
+        category_name=p.category.name if p.category else None,
+        unit_name=p.unit.name if p.unit else None,
+    )
 
 
 @router.get("", response_model=ProductListResponse)

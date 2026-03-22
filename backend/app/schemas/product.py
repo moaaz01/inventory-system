@@ -41,6 +41,8 @@ class ProductResponse(ProductBase):
     created_at: datetime
     updated_at: datetime
     stock: list[StockInfo] = []
+    category_name: Optional[str] = None
+    unit_name: Optional[str] = None
 
     model_config = {"from_attributes": True}
 
