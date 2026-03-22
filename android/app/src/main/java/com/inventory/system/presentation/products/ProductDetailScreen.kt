@@ -73,6 +73,14 @@ fun ProductDetailScreen(
                 title = { Text("تفاصيل المنتج") },
                 navigationIcon = { IconButton(onClick = onNavigateBack) { Icon(Icons.Default.ArrowBack, null) } },
                 actions = {
+                    // Generate barcode button
+                    uiState.selectedProduct?.let { product ->
+                        IconButton(onClick = {
+                            viewModel.downloadBarcode(product.sku)
+                        }) {
+                            Icon(Icons.Default.QrCode, contentDescription = "توليد باركود")
+                        }
+                    }
                     IconButton(onClick = { onNavigateToEdit(productId) }) {
                         Icon(Icons.Default.Edit, contentDescription = "تعديل")
                     }

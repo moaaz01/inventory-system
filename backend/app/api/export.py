@@ -249,3 +249,24 @@ def import_stock(file: UploadFile = File(...), db: Session = Depends(get_db), _:
             errors.append({"row": i, "error": str(e)})
     db.commit()
     return {"created": created, "updated": updated, "failed": failed, "errors": errors}
+
+
+@router.get("/api/barcode/{sku}")
+def generate_barcode(sku: str, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+    """Generate barcode PNG for a SKU."""
+    try:
+        import barcode
+        from barcode.writer import ImageWriter
+        from io import BytesIO
+        
+        code128 = barcode.get_barcode_class('code128')
+        rv = code128(sku, writer=ImageWriter())
+        buffer = BytesIO()
+        rv.write(buffer)
+        buffer.seek(0)
+        
+        from fastapi.responses import Response
+        return Response(content=buffer.getvalue(), media_type="image/png",
+                       headers={"Content-Disposition": f"inline; filename={sku}.png"})
+    except Exception as e:
+        raise HTTPException(500, f"Failed to generate barcode: {str(e)}")

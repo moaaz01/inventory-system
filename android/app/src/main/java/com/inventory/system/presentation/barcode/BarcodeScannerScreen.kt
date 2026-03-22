@@ -94,6 +94,20 @@ fun BarcodeScannerScreen(
         showScannerHint = true
     }
 
+    // Navigate when product is found
+    LaunchedEffect(uiState.foundProduct) {
+        uiState.foundProduct?.let { product ->
+            onProductFound(product.id)
+        }
+    }
+
+    // Navigate when product NOT found (after entering SKU manually)
+    LaunchedEffect(uiState.notFound) {
+        if (uiState.notFound && manualInput.length >= 3 && uiState.foundProduct == null) {
+            onProductNotFound(manualInput)
+        }
+    }
+
     // Auto-navigate when product found or not found
     LaunchedEffect(uiState.foundProduct) {
         uiState.foundProduct?.let { product ->
@@ -273,10 +287,10 @@ fun BarcodeScannerScreen(
                             }
                             Spacer(Modifier.height(6.dp))
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Button(onClick = { onBarcodeScanned(manualInput) }, modifier = Modifier.weight(1f)) {
+                                Button(onClick = { uiState.foundProduct?.id?.let { onProductFound(it) } }, modifier = Modifier.weight(1f)) {
                                     Icon(Icons.Default.Edit, null); Spacer(Modifier.width(4.dp)); Text("تعديل")
                                 }
-                                OutlinedButton(onClick = { onBarcodeScanned(manualInput) }, modifier = Modifier.weight(1f)) {
+                                OutlinedButton(onClick = { uiState.foundProduct?.id?.let { onProductFound(it) } }, modifier = Modifier.weight(1f)) {
                                     Icon(Icons.Default.Inventory, null); Spacer(Modifier.width(4.dp)); Text("التفاصيل")
                                 }
                             }
@@ -290,7 +304,7 @@ fun BarcodeScannerScreen(
                             Icon(Icons.Default.SearchOff, null, modifier = Modifier.size(40.dp), tint = MaterialTheme.colorScheme.error)
                             Text("لم يتم العثور على منتج", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onErrorContainer)
                             Text("لا يوجد منتج بالرمز \"$manualInput\"", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f), textAlign = TextAlign.Center)
-                            Button(onClick = { onBarcodeScanned(manualInput) }, modifier = Modifier.fillMaxWidth()) {
+                            Button(onClick = { onProductNotFound(manualInput) }, modifier = Modifier.fillMaxWidth()) {
                                 Icon(Icons.Default.Add, null); Spacer(Modifier.width(8.dp)); Text("إضافة منتج جديد بهذا الرمز")
                             }
                         }
