@@ -27,7 +27,7 @@ app.add_middleware(
 )
 
 # Register routers
-from app.api import auth, categories, units, warehouses, products, stock, movements, reports
+from app.api import auth, categories, units, warehouses, products, stock, movements, reports, users, export
 
 app.include_router(auth.router)
 app.include_router(categories.router)
@@ -37,6 +37,8 @@ app.include_router(products.router)
 app.include_router(stock.router)
 app.include_router(movements.router)
 app.include_router(reports.router)
+app.include_router(users.router)
+app.include_router(export.router)
 
 
 @app.get("/health")

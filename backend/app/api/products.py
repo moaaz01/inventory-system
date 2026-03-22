@@ -33,6 +33,16 @@ def enrich_product(p: Product) -> ProductResponse:
     )
 
 
+@router.get("/all", response_model=list[ProductResponse])
+def list_all_products(
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
+    """Return all products without pagination - for dropdowns."""
+    items = db.query(Product).all()
+    return [enrich_product(p) for p in items]
+
+
 @router.get("", response_model=ProductListResponse)
 def list_products(
     search: Optional[str] = None,
