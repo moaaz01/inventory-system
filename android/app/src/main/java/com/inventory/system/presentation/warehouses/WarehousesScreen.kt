@@ -20,6 +20,7 @@ import com.inventory.system.presentation.components.LoadingScreen
 @Composable
 fun WarehousesScreen(
     onWarehouseClick: (Int) -> Unit,
+    onAddWarehouse: (() -> Unit)? = null,
     viewModel: WarehouseViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -34,6 +35,13 @@ fun WarehousesScreen(
                     }
                 }
             )
+        },
+        floatingActionButton = {
+            onAddWarehouse?.let {
+                FloatingActionButton(onClick = it) {
+                    Icon(Icons.Default.Add, contentDescription = "إضافة مستودع")
+                }
+            }
         }
     ) { padding ->
         when {

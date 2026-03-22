@@ -42,7 +42,13 @@ class StockViewModel @Inject constructor(
     }
 
     private fun loadData() {
-        viewModelScope.launch { warehouseRepository.getWarehouses() }
+        viewModelScope.launch {
+            val r = warehouseRepository.getWarehouses()
+            if (r is Result.Success) _uiState.update { it.copy(warehouses = r.data) }
+        }
+        viewModelScope.launch {
+            productRepository.getProducts(null, null).collect { /* populate cache */ }
+        }
     }
 
     fun receipt(productId: Int, warehouseId: Int, quantity: Int, ref: String?, notes: String?) {

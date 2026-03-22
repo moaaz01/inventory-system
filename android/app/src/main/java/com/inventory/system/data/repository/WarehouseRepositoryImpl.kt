@@ -32,4 +32,12 @@ class WarehouseRepositoryImpl @Inject constructor(
         location?.let { body["location"] = it }
         api.createWarehouse(body).toDomain()
     }
+
+    override suspend fun updateWarehouse(id: Int, name: String, location: String?): Result<Warehouse> = safeApiCall {
+        val body = mutableMapOf("name" to name)
+        location?.let { body["location"] = it }
+        val dto = api.updateWarehouse(id, body)
+        warehouseDao.upsertAll(listOf(dto.toEntity()))
+        dto.toDomain()
+    }
 }

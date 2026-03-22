@@ -14,7 +14,9 @@ data class WarehouseUiState(
     val isLoading: Boolean = false,
     val warehouses: List<Warehouse> = emptyList(),
     val selectedWarehouse: Warehouse? = null,
-    val error: String? = null
+    val error: String? = null,
+    val actionSuccess: Boolean = false,
+    val actionError: String? = null
 )
 
 @HiltViewModel
@@ -47,5 +49,37 @@ class WarehouseViewModel @Inject constructor(
                 is Result.Loading -> {}
             }
         }
+    }
+
+    fun createWarehouse(name: String, location: String?) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, actionError = null) }
+            when (val r = warehouseRepository.createWarehouse(name, location)) {
+                is Result.Success -> {
+                    _uiState.update { it.copy(isLoading = false, actionSuccess = true) }
+                    loadWarehouses()
+                }
+                is Result.Error -> _uiState.update { it.copy(isLoading = false, actionError = r.message) }
+                is Result.Loading -> {}
+            }
+        }
+    }
+
+    fun updateWarehouse(id: Int, name: String, location: String?) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, actionError = null) }
+            when (val r = warehouseRepository.updateWarehouse(id, name, location)) {
+                is Result.Success -> {
+                    _uiState.update { it.copy(isLoading = false, actionSuccess = true) }
+                    loadWarehouses()
+                }
+                is Result.Error -> _uiState.update { it.copy(isLoading = false, actionError = r.message) }
+                is Result.Loading -> {}
+            }
+        }
+    }
+
+    fun clearActionState() {
+        _uiState.update { it.copy(actionSuccess = false, actionError = null) }
     }
 }

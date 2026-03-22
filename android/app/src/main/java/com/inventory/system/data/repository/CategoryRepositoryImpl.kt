@@ -26,4 +26,15 @@ class CategoryRepositoryImpl @Inject constructor(
     override suspend fun createCategory(name: String): Result<Category> = safeApiCall {
         api.createCategory(mapOf("name" to name)).toDomain()
     }
+
+    override suspend fun updateCategory(id: Int, name: String): Result<Category> = safeApiCall {
+        val dto = api.updateCategory(id, mapOf("name" to name))
+        categoryDao.upsertAll(listOf(dto.toEntity()))
+        dto.toDomain()
+    }
+
+    override suspend fun deleteCategory(id: Int): Result<kotlin.Unit> = safeApiCall {
+        api.deleteCategory(id)
+        categoryDao.deleteById(id)
+    }
 }

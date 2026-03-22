@@ -16,6 +16,8 @@ import com.inventory.system.presentation.products.ProductDetailScreen
 import com.inventory.system.presentation.products.ProductsScreen
 import com.inventory.system.presentation.reports.ReportsScreen
 import com.inventory.system.presentation.stock.StockOperationsScreen
+import com.inventory.system.presentation.categories.CategoriesScreen
+import com.inventory.system.presentation.warehouses.AddEditWarehouseScreen
 import com.inventory.system.presentation.warehouses.WarehouseDetailScreen
 import com.inventory.system.presentation.warehouses.WarehousesScreen
 
@@ -57,7 +59,7 @@ fun InventoryNavHost() {
             )
         }
 
-        composable(Screen.Main.route) {
+        composable(route = Screen.Main.route) {
             MainScreen(
                 onNavigateToLogin = {
                     navController.navigate(Screen.Login.route) {
@@ -75,6 +77,9 @@ fun InventoryNavHost() {
                 },
                 onNavigateToWarehouseDetail = { id ->
                     navController.navigate(Screen.WarehouseDetail.createRoute(id))
+                },
+                onNavigateToAddWarehouse = {
+                    navController.navigate(Screen.AddEditWarehouse.createRoute())
                 }
             )
         }
@@ -105,6 +110,18 @@ fun InventoryNavHost() {
                 onNavigateBack = { navController.popBackStack() }
             )
         }
+
+        composable(route = Screen.AddEditWarehouse.route) { backStackEntry ->
+            val warehouseId = backStackEntry.arguments?.getString("warehouseId")?.toIntOrNull()
+            AddEditWarehouseScreen(
+                warehouseId = warehouseId,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(route = Screen.Categories.route) {
+            CategoriesScreen(onNavigateBack = { navController.popBackStack() })
+        }
     }
 }
 
@@ -114,7 +131,8 @@ fun MainScreen(
     onNavigateToProductDetail: (Int) -> Unit,
     onNavigateToAddProduct: () -> Unit,
     onNavigateToEditProduct: (Int) -> Unit,
-    onNavigateToWarehouseDetail: (Int) -> Unit
+    onNavigateToWarehouseDetail: (Int) -> Unit,
+    onNavigateToAddWarehouse: () -> Unit = {}
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -155,7 +173,10 @@ fun MainScreen(
                 )
             }
             composable(Screen.Warehouses.route) {
-                WarehousesScreen(onWarehouseClick = onNavigateToWarehouseDetail)
+                WarehousesScreen(
+                    onWarehouseClick = onNavigateToWarehouseDetail,
+                    onAddWarehouse = onNavigateToAddWarehouse
+                )
             }
             composable(Screen.StockOperations.route) {
                 StockOperationsScreen()

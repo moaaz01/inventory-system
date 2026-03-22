@@ -27,6 +27,10 @@ sealed class Screen(val route: String) {
     object WarehouseDetail : Screen("warehouse_detail/{warehouseId}") {
         fun createRoute(warehouseId: Int) = "warehouse_detail/$warehouseId"
     }
+    object AddEditWarehouse : Screen("add_edit_warehouse?warehouseId={warehouseId}") {
+        fun createRoute(warehouseId: Int? = null) = if (warehouseId != null) "add_edit_warehouse?warehouseId=$warehouseId" else "add_edit_warehouse"
+    }
+    object Categories : Screen("categories")
 }
 
 enum class BottomNavItem(

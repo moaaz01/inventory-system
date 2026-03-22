@@ -26,6 +26,8 @@ interface CategoryRepository {
     suspend fun getCategories(): Result<List<Category>>
     fun getCachedCategories(): Flow<List<Category>>
     suspend fun createCategory(name: String): Result<Category>
+    suspend fun updateCategory(id: Int, name: String): Result<Category>
+    suspend fun deleteCategory(id: Int): Result<Unit>
 }
 
 interface WarehouseRepository {
@@ -33,6 +35,7 @@ interface WarehouseRepository {
     fun getCachedWarehouses(): Flow<List<Warehouse>>
     suspend fun getWarehouse(id: Int): Result<Warehouse>
     suspend fun createWarehouse(name: String, location: String?): Result<Warehouse>
+    suspend fun updateWarehouse(id: Int, name: String, location: String?): Result<Warehouse>
 }
 
 interface StockRepository {

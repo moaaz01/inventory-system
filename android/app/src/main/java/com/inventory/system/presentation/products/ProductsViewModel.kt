@@ -50,10 +50,6 @@ class ProductsViewModel @Inject constructor(
 
     private fun loadFilters() {
         viewModelScope.launch {
-            categoryRepository.getCategories()
-            unitRepository.getUnits()
-        }
-        viewModelScope.launch {
             categoryRepository.getCachedCategories().collect { cats ->
                 _uiState.update { it.copy(categories = cats) }
             }
@@ -62,6 +58,12 @@ class ProductsViewModel @Inject constructor(
             unitRepository.getCachedUnits().collect { units ->
                 _uiState.update { it.copy(units = units) }
             }
+        }
+        viewModelScope.launch {
+            categoryRepository.getCategories() // populates cache → updates state via flow
+        }
+        viewModelScope.launch {
+            unitRepository.getUnits() // populates cache → updates state via flow
         }
     }
 
