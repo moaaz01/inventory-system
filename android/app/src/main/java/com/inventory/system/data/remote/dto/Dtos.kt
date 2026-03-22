@@ -36,7 +36,10 @@ data class ProductDto(
     @SerializedName("category_name") val categoryName: String?,
     @SerializedName("unit_name") val unitName: String?,
     // Products API returns nested stock as "stock" array with {warehouse_id, warehouse_name, quantity}
-    val stock: List<ProductStockDto>? = null
+    val stock: List<ProductStockDto>? = null,
+    @SerializedName("retail_price") val retailPrice: Double? = null,
+    @SerializedName("wholesale_price") val wholesalePrice: Double? = null,
+    val currency: String = "USD"
 )
 
 data class ProductStockDto(
@@ -50,7 +53,10 @@ data class ProductCreateRequest(
     val name: String,
     @SerializedName("category_id") val categoryId: Int?,
     @SerializedName("unit_id") val unitId: Int?,
-    @SerializedName("min_stock_level") val minStockLevel: Int
+    @SerializedName("min_stock_level") val minStockLevel: Int,
+    @SerializedName("retail_price") val retailPrice: Double? = null,
+    @SerializedName("wholesale_price") val wholesalePrice: Double? = null,
+    val currency: String = "USD"
 )
 
 data class PaginatedResponse<T>(

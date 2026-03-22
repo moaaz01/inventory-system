@@ -27,17 +27,17 @@ class ProductRepositoryImpl @Inject constructor(
         api.getProduct(id).toDomain()
     }
 
-    override suspend fun createProduct(sku: String, name: String, categoryId: Int?, unitId: Int?, minStockLevel: Int): Result<Product> = safeApiCall {
+    override suspend fun createProduct(sku: String, name: String, categoryId: Int?, unitId: Int?, minStockLevel: Int, retailPrice: Double?, wholesalePrice: Double?, currency: String): Result<Product> = safeApiCall {
         val dto = api.createProduct(
-            com.inventory.system.data.remote.dto.ProductCreateRequest(sku, name, categoryId, unitId, minStockLevel)
+            com.inventory.system.data.remote.dto.ProductCreateRequest(sku, name, categoryId, unitId, minStockLevel, retailPrice, wholesalePrice, currency)
         )
         productDao.upsert(dto.toEntity())
         dto.toDomain()
     }
 
-    override suspend fun updateProduct(id: Int, sku: String, name: String, categoryId: Int?, unitId: Int?, minStockLevel: Int): Result<Product> = safeApiCall {
+    override suspend fun updateProduct(id: Int, sku: String, name: String, categoryId: Int?, unitId: Int?, minStockLevel: Int, retailPrice: Double?, wholesalePrice: Double?, currency: String): Result<Product> = safeApiCall {
         val dto = api.updateProduct(
-            id, com.inventory.system.data.remote.dto.ProductCreateRequest(sku, name, categoryId, unitId, minStockLevel)
+            id, com.inventory.system.data.remote.dto.ProductCreateRequest(sku, name, categoryId, unitId, minStockLevel, retailPrice, wholesalePrice, currency)
         )
         productDao.upsert(dto.toEntity())
         dto.toDomain()

@@ -84,10 +84,10 @@ class ProductsViewModel @Inject constructor(
         }
     }
 
-    fun createProduct(sku: String, name: String, categoryId: Int?, unitId: Int?, minStockLevel: Int) {
+    fun createProduct(sku: String, name: String, categoryId: Int?, unitId: Int?, minStockLevel: Int, retailPrice: Double? = null, wholesalePrice: Double? = null, currency: String = "USD") {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, actionError = null) }
-            when (val r = productRepository.createProduct(sku, name, categoryId, unitId, minStockLevel)) {
+            when (val r = productRepository.createProduct(sku, name, categoryId, unitId, minStockLevel, retailPrice, wholesalePrice, currency)) {
                 is Result.Success -> _uiState.update { it.copy(isLoading = false, actionSuccess = true) }
                 is Result.Error -> _uiState.update { it.copy(isLoading = false, actionError = r.message) }
                 is Result.Loading -> {}
@@ -95,10 +95,10 @@ class ProductsViewModel @Inject constructor(
         }
     }
 
-    fun updateProduct(id: Int, sku: String, name: String, categoryId: Int?, unitId: Int?, minStockLevel: Int) {
+    fun updateProduct(id: Int, sku: String, name: String, categoryId: Int?, unitId: Int?, minStockLevel: Int, retailPrice: Double? = null, wholesalePrice: Double? = null, currency: String = "USD") {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, actionError = null) }
-            when (val r = productRepository.updateProduct(id, sku, name, categoryId, unitId, minStockLevel)) {
+            when (val r = productRepository.updateProduct(id, sku, name, categoryId, unitId, minStockLevel, retailPrice, wholesalePrice, currency)) {
                 is Result.Success -> _uiState.update { it.copy(isLoading = false, actionSuccess = true) }
                 is Result.Error -> _uiState.update { it.copy(isLoading = false, actionError = r.message) }
                 is Result.Loading -> {}

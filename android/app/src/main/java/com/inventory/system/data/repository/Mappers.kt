@@ -15,7 +15,10 @@ fun ProductDto.toDomain() = Product(
     unitId = unitId,
     unitName = unitName,
     minStockLevel = minStockLevel,
-    stockInfo = stock?.map { StockInfo(productId = id, warehouseId = it.warehouseId, quantity = it.quantity, warehouseName = it.warehouseName) } ?: emptyList()
+    stockInfo = stock?.map { StockInfo(productId = id, warehouseId = it.warehouseId, quantity = it.quantity, warehouseName = it.warehouseName) } ?: emptyList(),
+    retailPrice = retailPrice,
+    wholesalePrice = wholesalePrice,
+    currency = currency
 )
 
 fun CategoryDto.toDomain(): Category = Category(
@@ -83,7 +86,10 @@ fun LowStockItemDto.toDomain() = Product(
     unitId = null,
     unitName = null,
     minStockLevel = minStockLevel,
-    stockInfo = listOf(StockInfo(productId = productId, warehouseId = warehouseId, quantity = quantity, warehouseName = warehouseName))
+    stockInfo = listOf(StockInfo(productId = productId, warehouseId = warehouseId, quantity = quantity, warehouseName = warehouseName)),
+    retailPrice = null,
+    wholesalePrice = null,
+    currency = "USD"
 )
 
 fun UserDto.toDomain() = User(id = id, username = username, email = email, role = role, isActive = isActive)
@@ -92,7 +98,10 @@ fun UserDto.toDomain() = User(id = id, username = username, email = email, role 
 fun ProductDto.toEntity() = ProductEntity(
     id = id, sku = sku, name = name, categoryId = categoryId,
     unitId = unitId, minStockLevel = minStockLevel,
-    categoryName = categoryName, unitName = unitName
+    categoryName = categoryName, unitName = unitName,
+    retailPrice = retailPrice?.toFloat(),
+    wholesalePrice = wholesalePrice?.toFloat(),
+    currency = currency
 )
 
 fun CategoryDto.toEntity() = CategoryEntity(id = id, name = name, parentId = parentId)
@@ -105,7 +114,10 @@ fun UnitDto.toEntity() = UnitEntity(id = id, name = name, symbol = symbol)
 fun ProductEntity.toDomain() = Product(
     id = id, sku = sku, name = name, categoryId = categoryId,
     categoryName = categoryName, unitId = unitId, unitName = unitName,
-    minStockLevel = minStockLevel
+    minStockLevel = minStockLevel,
+    retailPrice = retailPrice?.toDouble(),
+    wholesalePrice = wholesalePrice?.toDouble(),
+    currency = currency
 )
 
 fun CategoryEntity.toDomain() = Category(id = id, name = name, parentId = parentId)

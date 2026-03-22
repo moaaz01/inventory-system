@@ -33,6 +33,13 @@ fun AddEditProductScreen(
     var categoryExpanded by remember { mutableStateOf(false) }
     var unitExpanded by remember { mutableStateOf(false) }
 
+    // Pricing fields
+    var retailPrice by remember { mutableStateOf("") }
+    var wholesalePrice by remember { mutableStateOf("") }
+    var selectedCurrency by remember { mutableStateOf("USD") }
+    var currencyExpanded by remember { mutableStateOf(false) }
+    val currencies = listOf("USD", "SYP", "TRY")
+
     LaunchedEffect(productId) {
         if (productId != null) {
             viewModel.loadProduct(productId)
@@ -47,6 +54,9 @@ fun AddEditProductScreen(
                 minStock = p.minStockLevel.toString()
                 selectedCategoryId = p.categoryId
                 selectedUnitId = p.unitId
+                retailPrice = p.retailPrice?.toString() ?: ""
+                wholesalePrice = p.wholesalePrice?.toString() ?: ""
+                selectedCurrency = p.currency
             }
         }
     }
@@ -120,6 +130,46 @@ fun AddEditProductScreen(
                 }
             }
 
+            HorizontalDivider()
+            Text("التسعيرة", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+
+            OutlinedTextField(
+                value = retailPrice,
+                onValueChange = { retailPrice = it },
+                label = { Text("سعر التجزئة") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                leadingIcon = { Icon(Icons.Default.Sell, null) }
+            )
+
+            OutlinedTextField(
+                value = wholesalePrice,
+                onValueChange = { wholesalePrice = it },
+                label = { Text("سعر الجملة") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                leadingIcon = { Icon(Icons.Default.LocalOffer, null) }
+            )
+
+            // Currency picker
+            ExposedDropdownMenuBox(expanded = currencyExpanded, onExpandedChange = { currencyExpanded = it }) {
+                OutlinedTextField(
+                    value = selectedCurrency,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("العملة") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = currencyExpanded) },
+                    modifier = Modifier.fillMaxWidth().menuAnchor()
+                )
+                ExposedDropdownMenu(expanded = currencyExpanded, onDismissRequest = { currencyExpanded = false }) {
+                    currencies.forEach { cur ->
+                        DropdownMenuItem(text = { Text(cur) }, onClick = { selectedCurrency = cur; currencyExpanded = false })
+                    }
+                }
+            }
+
             uiState.actionError?.let { err ->
                 Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)) {
                     Text(err, Modifier.padding(12.dp), color = MaterialTheme.colorScheme.onErrorContainer)
@@ -129,10 +179,12 @@ fun AddEditProductScreen(
             Button(
                 onClick = {
                     val min = minStock.toIntOrNull() ?: 0
+                    val rPrice = retailPrice.toDoubleOrNull()
+                    val wPrice = wholesalePrice.toDoubleOrNull()
                     if (isEdit && productId != null) {
-                        viewModel.updateProduct(productId, sku, name, selectedCategoryId, selectedUnitId, min)
+                        viewModel.updateProduct(productId, sku, name, selectedCategoryId, selectedUnitId, min, rPrice, wPrice, selectedCurrency)
                     } else {
-                        viewModel.createProduct(sku, name, selectedCategoryId, selectedUnitId, min)
+                        viewModel.createProduct(sku, name, selectedCategoryId, selectedUnitId, min, rPrice, wPrice, selectedCurrency)
                     }
                 },
                 enabled = !uiState.isLoading && sku.isNotBlank() && name.isNotBlank(),

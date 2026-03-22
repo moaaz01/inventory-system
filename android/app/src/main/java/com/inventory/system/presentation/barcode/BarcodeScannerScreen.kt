@@ -21,6 +21,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 fun BarcodeScannerScreen(
     onBarcodeScanned: (String) -> Unit,
     onNavigateBack: () -> Unit,
+    onNavigateToProductDetail: ((Int) -> Unit)? = null,
     viewModel: BarcodeViewModel = hiltViewModel()
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -242,7 +243,7 @@ fun BarcodeScannerScreen(
                                     Text("الحد الأدنى", style = MaterialTheme.typography.labelSmall)
                                     Text("${uiState.foundProduct!!.minStockLevel}", style = MaterialTheme.typography.bodyLarge)
                                 }
-                                Column(horizontalAlignment = Alignment.End) {
+                                Column(horizontalAlignment = androidx.compose.ui.Alignment.End) {
                                     Text("الكمية المتوفرة", style = MaterialTheme.typography.labelSmall)
                                     val totalQty = uiState.foundProduct!!.stockInfo.sumOf { it.quantity }
                                     Text(
@@ -252,6 +253,28 @@ fun BarcodeScannerScreen(
                                     )
                                 }
                             }
+
+                            // Pricing info
+                            uiState.foundProduct!!.retailPrice?.let { rp ->
+                                HorizontalDivider()
+                                Row(modifier = Modifier.fillMaxWidth()) {
+                                    val symbol = when (uiState.foundProduct!!.currency) {
+                                        "SYP" -> "ل.س"
+                                        "TRY" -> "₺"
+                                        else -> "$"
+                                    }
+                                    Text(
+                                        "سعر التجزئة: ${"%.2f".format(rp)} $symbol",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                }
+                            }
+                            Text(
+                                "سعر الجملة: متاح في إعدادات المنتج",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                            )
 
                             Spacer(Modifier.height(6.dp))
 
@@ -268,7 +291,14 @@ fun BarcodeScannerScreen(
                                     Text("تعديل المنتج")
                                 }
                                 OutlinedButton(
-                                    onClick = { onBarcodeScanned(manualInput) },
+                                    onClick = {
+                                        val product = uiState.foundProduct
+                                        if (product != null && onNavigateToProductDetail != null) {
+                                            onNavigateToProductDetail(product.id)
+                                        } else {
+                                            onBarcodeScanned(manualInput)
+                                        }
+                                    },
                                     modifier = Modifier.weight(1f)
                                 ) {
                                     Icon(Icons.Default.Inventory, null)

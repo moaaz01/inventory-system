@@ -17,8 +17,8 @@ interface ProductRepository {
     fun getProducts(search: String? = null, categoryId: Int? = null): Flow<PagingData<Product>>
     suspend fun getProduct(id: Int): Result<Product>
     suspend fun fetchAllProducts(): Result<List<Product>>
-    suspend fun createProduct(sku: String, name: String, categoryId: Int?, unitId: Int?, minStockLevel: Int): Result<Product>
-    suspend fun updateProduct(id: Int, sku: String, name: String, categoryId: Int?, unitId: Int?, minStockLevel: Int): Result<Product>
+    suspend fun createProduct(sku: String, name: String, categoryId: Int?, unitId: Int?, minStockLevel: Int, retailPrice: Double? = null, wholesalePrice: Double? = null, currency: String = "USD"): Result<Product>
+    suspend fun updateProduct(id: Int, sku: String, name: String, categoryId: Int?, unitId: Int?, minStockLevel: Int, retailPrice: Double? = null, wholesalePrice: Double? = null, currency: String = "USD"): Result<Product>
     suspend fun deleteProduct(id: Int): Result<Unit>
     fun getCachedProducts(): Flow<List<Product>>
     suspend fun getProductBySku(sku: String): Product?

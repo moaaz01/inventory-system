@@ -12,7 +12,7 @@ import com.inventory.system.data.local.entity.*
         WarehouseEntity::class,
         UnitEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class InventoryDatabase : RoomDatabase() {

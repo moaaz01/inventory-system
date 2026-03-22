@@ -17,7 +17,10 @@ data class Product(
     val unitId: Int?,
     val unitName: String?,
     val minStockLevel: Int,
-    val stockInfo: List<StockInfo> = emptyList()
+    val stockInfo: List<StockInfo> = emptyList(),
+    val retailPrice: Double? = null,
+    val wholesalePrice: Double? = null,
+    val currency: String = "USD"
 )
 
 data class Category(

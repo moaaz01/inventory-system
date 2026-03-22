@@ -12,7 +12,10 @@ data class ProductEntity(
     val unitId: Int?,
     val minStockLevel: Int,
     val categoryName: String?,
-    val unitName: String?
+    val unitName: String?,
+    val retailPrice: Float? = null,
+    val wholesalePrice: Float? = null,
+    val currency: String = "USD"
 )
 
 @Entity(tableName = "categories")

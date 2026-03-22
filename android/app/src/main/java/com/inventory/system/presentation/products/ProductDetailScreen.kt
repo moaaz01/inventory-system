@@ -97,6 +97,30 @@ fun ProductDetailScreen(
                         }
                     }
 
+                    // Pricing Card
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                    ) {
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("التسعيرة", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                            if (p.retailPrice != null) {
+                                Text(
+                                    "سعر التجزئة: ${formatPrice(p.retailPrice, p.currency)}",
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            } else {
+                                Text("سعر التجزئة: غير محدد", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                            }
+                            Text(
+                                "سعر الجملة: متاح في إعدادات المنتج",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
+
                     if (p.stockInfo.isNotEmpty()) {
                         Text("المخزون حسب المستودع", style = MaterialTheme.typography.titleMedium)
                         p.stockInfo.forEach { stock ->
@@ -129,5 +153,15 @@ fun InfoRow(label: String, value: String) {
         Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(value, style = MaterialTheme.typography.bodyMedium)
     }
+}
+
+fun formatPrice(price: Double?, currency: String): String {
+    if (price == null) return "غير محدد"
+    val symbol = when (currency) {
+        "SYP" -> "ل.س"
+        "TRY" -> "₺"
+        else -> "$"
+    }
+    return "${"%.2f".format(price)} $symbol"
 }
 
