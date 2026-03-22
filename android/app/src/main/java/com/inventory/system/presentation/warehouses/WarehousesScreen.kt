@@ -82,17 +82,64 @@ fun WarehousesScreen(
 fun WarehouseDetailScreen(
     warehouseId: Int,
     onNavigateBack: () -> Unit,
+    onNavigateToEdit: ((Int) -> Unit)? = null,
     viewModel: WarehouseViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(warehouseId) { viewModel.loadWarehouse(warehouseId) }
 
+    LaunchedEffect(uiState.actionSuccess) {
+        if (uiState.actionSuccess) {
+            viewModel.clearActionState()
+            onNavigateBack()
+        }
+    }
+    LaunchedEffect(uiState.actionError) {
+        uiState.actionError?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearActionState()
+        }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("تأكيد الحذف") },
+            text = { Text("هل أنت متأكد من حذف هذا المستودع؟") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        viewModel.deleteWarehouse(warehouseId)
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) { Text("حذف") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) { Text("إلغاء") }
+            }
+        )
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("تفاصيل المستودع") },
-                navigationIcon = { IconButton(onClick = onNavigateBack) { Icon(Icons.Default.ArrowBack, null) } }
+                navigationIcon = { IconButton(onClick = onNavigateBack) { Icon(Icons.Default.ArrowBack, null) } },
+                actions = {
+                    onNavigateToEdit?.let { nav ->
+                        IconButton(onClick = { nav(warehouseId) }) {
+                            Icon(Icons.Default.Edit, contentDescription = "تعديل")
+                        }
+                    }
+                    IconButton(onClick = { showDeleteDialog = true }) {
+                        Icon(Icons.Default.Delete, contentDescription = "حذف", tint = MaterialTheme.colorScheme.error)
+                    }
+                }
             )
         }
     ) { padding ->
@@ -105,7 +152,6 @@ fun WarehouseDetailScreen(
                 val lowStockThreshold = 10
                 LazyColumn(Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
                     item {
-                        // Info card
                         Card(Modifier.fillMaxWidth()) {
                             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Text(w.name, style = MaterialTheme.typography.titleLarge)
@@ -113,7 +159,6 @@ fun WarehouseDetailScreen(
                             }
                         }
                         Spacer(Modifier.height(12.dp))
-                        // Summary card
                         val lowCount = w.stockInfo.count { it.quantity < lowStockThreshold }
                         Card(
                             Modifier.fillMaxWidth(),
@@ -162,18 +207,10 @@ fun WarehouseDetailScreen(
                                 ) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         if (isLow) {
-                                            Icon(
-                                                Icons.Default.Warning,
-                                                null,
-                                                tint = MaterialTheme.colorScheme.error,
-                                                modifier = Modifier.size(18.dp)
-                                            )
+                                            Icon(Icons.Default.Warning, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp))
                                             Spacer(Modifier.width(8.dp))
                                         }
-                                        Text(
-                                            stock.productName ?: "منتج #${stock.productId}",
-                                            style = MaterialTheme.typography.bodyLarge
-                                        )
+                                        Text(stock.productName ?: "منتج #${stock.productId}", style = MaterialTheme.typography.bodyLarge)
                                     }
                                     Text(
                                         "${stock.quantity}",

@@ -79,4 +79,12 @@ class WarehouseRepositoryImpl @Inject constructor(
             result
         }
     }
+
+    override suspend fun deleteWarehouse(id: Int): Result<Unit> {
+        DebugLogger.logApiCall(TAG, "/api/warehouses/$id (DELETE)")
+        return safeApiCall {
+            api.deleteWarehouse(id)
+            DebugLogger.logApiResponse(TAG, "/api/warehouses/$id (DELETE)", true, 0)
+        }
+    }
 }

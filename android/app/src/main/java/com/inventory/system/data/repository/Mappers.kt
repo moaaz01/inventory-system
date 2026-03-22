@@ -86,7 +86,7 @@ fun LowStockItemDto.toDomain() = Product(
     stockInfo = listOf(StockInfo(productId = productId, warehouseId = warehouseId, quantity = quantity, warehouseName = warehouseName))
 )
 
-fun UserDto.toDomain() = User(id = id, username = username, email = email, role = role)
+fun UserDto.toDomain() = User(id = id, username = username, email = email, role = role, isActive = isActive)
 
 // DTO -> Entity
 fun ProductDto.toEntity() = ProductEntity(

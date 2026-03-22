@@ -4,7 +4,8 @@ data class User(
     val id: Int,
     val username: String,
     val email: String,
-    val role: String
+    val role: String,
+    val isActive: Boolean = true
 )
 
 data class Product(

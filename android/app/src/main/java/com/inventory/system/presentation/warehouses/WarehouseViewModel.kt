@@ -153,4 +153,24 @@ class WarehouseViewModel @Inject constructor(
             it.copy(actionSuccess = false, actionError = null) 
         }
     }
+
+    fun deleteWarehouse(id: Int) {
+        DebugLogger.logUserAction(TAG, "deleteWarehouse", mapOf("id" to id))
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, actionError = null) }
+            when (val r = warehouseRepository.deleteWarehouse(id)) {
+                is Result.Success -> {
+                    _uiState.update { it.copy(isLoading = false, actionSuccess = true) }
+                    loadWarehouses()
+                }
+                is Result.Error -> {
+                    val msg = if (r.message?.contains("400") == true || r.message?.contains("stock") == true)
+                        "لا يمكن حذف المستودع: يحتوي على مخزون"
+                    else r.message ?: "خطأ في الحذف"
+                    _uiState.update { it.copy(isLoading = false, actionError = msg) }
+                }
+                is Result.Loading -> {}
+            }
+        }
+    }
 }

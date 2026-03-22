@@ -35,4 +35,10 @@ abstract class RepositoryModule {
 
     @Binds @Singleton
     abstract fun bindUnitRepository(impl: UnitRepositoryImpl): UnitRepository
+
+    @Binds @Singleton
+    abstract fun bindUserRepository(impl: UserRepositoryImpl): UserRepository
+
+    @Binds @Singleton
+    abstract fun bindExportImportRepository(impl: ExportImportRepositoryImpl): ExportImportRepository
 }

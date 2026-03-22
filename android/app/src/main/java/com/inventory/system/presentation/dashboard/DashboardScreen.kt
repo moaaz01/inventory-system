@@ -22,6 +22,7 @@ import com.inventory.system.presentation.components.LoadingScreen
 fun DashboardScreen(
     onLogout: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    onNavigateToBarcodeScanner: () -> Unit = {},
     viewModel: DashboardViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
@@ -32,6 +33,9 @@ fun DashboardScreen(
             TopAppBar(
                 title = { Text("لوحة التحكم") },
                 actions = {
+                    IconButton(onClick = onNavigateToBarcodeScanner) {
+                        Icon(Icons.Default.QrCodeScanner, contentDescription = "مسح باركود")
+                    }
                     IconButton(onClick = onNavigateToSettings) {
                         Icon(Icons.Default.Settings, contentDescription = "الإعدادات")
                     }

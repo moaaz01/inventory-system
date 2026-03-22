@@ -18,6 +18,9 @@ interface ProductDao {
     @Query("SELECT * FROM products WHERE id = :id")
     suspend fun getProduct(id: Int): ProductEntity?
 
+    @Query("SELECT * FROM products WHERE sku = :sku LIMIT 1")
+    suspend fun getProductBySku(sku: String): ProductEntity?
+
     @Upsert
     suspend fun upsertAll(products: List<ProductEntity>)
 

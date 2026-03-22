@@ -32,6 +32,12 @@ sealed class Screen(val route: String) {
     }
     object Categories : Screen("categories")
     object Settings : Screen("settings")
+    object BarcodeScanner : Screen("barcode_scanner")
+    object Users : Screen("users")
+    object ExportImport : Screen("export_import")
+    object AddEditProductWithSku : Screen("add_edit_product?productId={productId}&sku={sku}") {
+        fun createRouteWithSku(sku: String) = "add_edit_product?sku=$sku"
+    }
 }
 
 enum class BottomNavItem(

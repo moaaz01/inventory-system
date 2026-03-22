@@ -18,13 +18,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 @Composable
 fun AddEditProductScreen(
     productId: Int? = null,
+    initialSku: String? = null,
     onNavigateBack: () -> Unit,
     viewModel: ProductsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isEdit = productId != null
 
-    var sku by remember { mutableStateOf("") }
+    var sku by remember { mutableStateOf(initialSku ?: "") }
     var name by remember { mutableStateOf("") }
     var minStock by remember { mutableStateOf("0") }
     var selectedCategoryId by remember { mutableStateOf<Int?>(null) }

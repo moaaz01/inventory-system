@@ -28,26 +28,22 @@ class StockViewModel @Inject constructor(
     val uiState: StateFlow<StockUiState> = _uiState.asStateFlow()
 
     init {
-        viewModelScope.launch {
-            productRepository.getCachedProducts().collect { prods ->
-                _uiState.update { it.copy(products = prods) }
-            }
-        }
-        viewModelScope.launch {
-            warehouseRepository.getCachedWarehouses().collect { warehouses ->
-                _uiState.update { it.copy(warehouses = warehouses) }
-            }
-        }
         loadData()
     }
 
     private fun loadData() {
         viewModelScope.launch {
-            val r = warehouseRepository.getWarehouses()
-            if (r is Result.Success) _uiState.update { it.copy(warehouses = r.data) }
-        }
-        viewModelScope.launch {
-            productRepository.getProducts(null, null).collect { /* populate cache */ }
+            _uiState.update { it.copy(isLoading = true) }
+            val warehouseResult = warehouseRepository.getWarehouses()
+            if (warehouseResult is Result.Success) {
+                _uiState.update { it.copy(warehouses = warehouseResult.data) }
+            }
+            val productResult = productRepository.fetchAllProducts()
+            if (productResult is Result.Success) {
+                _uiState.update { it.copy(products = productResult.data, isLoading = false) }
+            } else {
+                _uiState.update { it.copy(isLoading = false) }
+            }
         }
     }
 

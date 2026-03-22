@@ -22,17 +22,56 @@ fun ProductDetailScreen(
     viewModel: ProductsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(productId) { viewModel.loadProduct(productId) }
 
+    LaunchedEffect(uiState.actionSuccess) {
+        if (uiState.actionSuccess) {
+            viewModel.clearActionState()
+            onNavigateBack()
+        }
+    }
+    LaunchedEffect(uiState.actionError) {
+        uiState.actionError?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearActionState()
+        }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("تأكيد الحذف") },
+            text = { Text("هل أنت متأكد من حذف هذا المنتج؟ لا يمكن التراجع عن هذا الإجراء.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        viewModel.deleteProduct(productId)
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) { Text("حذف") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) { Text("إلغاء") }
+            }
+        )
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("تفاصيل المنتج") },
                 navigationIcon = { IconButton(onClick = onNavigateBack) { Icon(Icons.Default.ArrowBack, null) } },
                 actions = {
                     IconButton(onClick = { onNavigateToEdit(productId) }) {
-                        Icon(Icons.Default.Edit, null)
+                        Icon(Icons.Default.Edit, contentDescription = "تعديل")
+                    }
+                    IconButton(onClick = { showDeleteDialog = true }) {
+                        Icon(Icons.Default.Delete, contentDescription = "حذف", tint = MaterialTheme.colorScheme.error)
                     }
                 }
             )
@@ -91,3 +130,4 @@ fun InfoRow(label: String, value: String) {
         Text(value, style = MaterialTheme.typography.bodyMedium)
     }
 }
+

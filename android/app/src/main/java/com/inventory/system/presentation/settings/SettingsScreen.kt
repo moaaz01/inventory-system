@@ -22,6 +22,8 @@ import com.inventory.system.presentation.auth.AuthViewModel
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
     onLogout: () -> Unit,
+    onNavigateToUsers: () -> Unit = {},
+    onNavigateToExportImport: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -242,6 +244,43 @@ fun SettingsScreen(
 
             // Logout Button
             Spacer(modifier = Modifier.height(16.dp))
+
+            // Export/Import section
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("البيانات", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                    TextButton(
+                        onClick = onNavigateToExportImport,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.ImportExport, null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("تصدير واستيراد البيانات")
+                    }
+                }
+            }
+
+            // Users (admin only - shown if user role is admin from uiState)
+            if (uiState.userRole == "admin") {
+                Spacer(modifier = Modifier.height(8.dp))
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text("الإدارة", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                        TextButton(
+                            onClick = onNavigateToUsers,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(Icons.Default.People, null)
+                            Spacer(Modifier.width(8.dp))
+                            Text("إدارة المستخدمين")
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
             OutlinedButton(
                 onClick = { viewModel.logout() },
                 modifier = Modifier.fillMaxWidth(),

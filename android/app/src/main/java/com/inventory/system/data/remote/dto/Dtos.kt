@@ -22,7 +22,8 @@ data class UserDto(
     val id: Int,
     val username: String,
     val email: String,
-    val role: String
+    val role: String,
+    @com.google.gson.annotations.SerializedName("is_active") val isActive: Boolean = true
 )
 
 data class ProductDto(
@@ -165,4 +166,22 @@ data class LowStockItemDto(
     @SerializedName("warehouse_name") val warehouseName: String,
     val quantity: Int,
     @SerializedName("min_stock_level") val minStockLevel: Int
+)
+
+data class ImportResult(
+    val success: Boolean,
+    val message: String,
+    val count: Int = 0
+)
+
+data class CreateUserRequest(
+    val username: String,
+    val email: String,
+    val password: String,
+    val role: String
+)
+
+data class UpdateUserRequest(
+    val role: String? = null,
+    @com.google.gson.annotations.SerializedName("is_active") val isActive: Boolean? = null
 )

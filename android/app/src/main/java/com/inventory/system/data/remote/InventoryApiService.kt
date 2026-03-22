@@ -118,4 +118,43 @@ interface InventoryApiService {
     // Dashboard
     @GET("api/dashboard/stats")
     suspend fun getDashboardStats(): DashboardStatsDto
+
+    // All products (no paging) for dropdowns
+    @GET("api/products")
+    suspend fun getAllProducts(
+        @Query("page") page: Int = 1,
+        @Query("size") size: Int = 9999
+    ): PaginatedResponse<ProductDto>
+
+    // Export
+    @GET("api/export/products")
+    suspend fun exportProducts(): okhttp3.ResponseBody
+
+    @GET("api/export/warehouses")
+    suspend fun exportWarehouses(): okhttp3.ResponseBody
+
+    @GET("api/export/all")
+    suspend fun exportAll(): okhttp3.ResponseBody
+
+    // Import
+    @Multipart
+    @POST("api/import/products")
+    suspend fun importProducts(@Part file: okhttp3.MultipartBody.Part): ImportResult
+
+    @Multipart
+    @POST("api/import/warehouses")
+    suspend fun importWarehouses(@Part file: okhttp3.MultipartBody.Part): ImportResult
+
+    // Users (admin)
+    @GET("api/users")
+    suspend fun getUsers(): List<UserDto>
+
+    @POST("api/users")
+    suspend fun createUser(@Body data: CreateUserRequest): UserDto
+
+    @PUT("api/users/{id}")
+    suspend fun updateUser(@Path("id") id: Int, @Body data: UpdateUserRequest): UserDto
+
+    @DELETE("api/users/{id}")
+    suspend fun deleteUser(@Path("id") id: Int)
 }

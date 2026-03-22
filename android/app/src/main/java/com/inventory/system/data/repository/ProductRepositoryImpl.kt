@@ -47,6 +47,17 @@ class ProductRepositoryImpl @Inject constructor(
         api.deleteProduct(id)
     }
 
+    override suspend fun fetchAllProducts(): Result<List<Product>> = safeApiCall {
+        val response = api.getAllProducts(page = 1, size = 9999)
+        val products = response.items.map { it.toDomain() }
+        productDao.upsertAll(response.items.map { it.toEntity() })
+        products
+    }
+
+    override suspend fun getProductBySku(sku: String): Product? {
+        return productDao.getProductBySku(sku)?.toDomain()
+    }
+
     override fun getCachedProducts(): Flow<List<Product>> =
         productDao.getAllProducts().map { list -> list.map { it.toDomain() } }
 }

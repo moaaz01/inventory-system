@@ -14,6 +14,7 @@ data class SettingsUiState(
     val username: String = "",
     val email: String = "",
     val role: String = "",
+    val userRole: String = "",
     val serverUrl: String = "http://10.0.2.2:8000/",
     val isChangingPassword: Boolean = false,
     val passwordError: String? = null,
@@ -38,7 +39,8 @@ class SettingsViewModel @Inject constructor(
                             isLoading = false,
                             username = result.data.username,
                             email = result.data.email,
-                            role = getRoleDisplayName(result.data.role)
+                            role = getRoleDisplayName(result.data.role),
+                            userRole = result.data.role
                         )
                     }
                 }

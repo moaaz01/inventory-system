@@ -10,13 +10,16 @@ import androidx.navigation.compose.*
 import com.inventory.system.presentation.auth.LoginScreen
 import com.inventory.system.presentation.auth.RegisterScreen
 import com.inventory.system.presentation.auth.SplashScreen
+import com.inventory.system.presentation.barcode.BarcodeScannerScreen
 import com.inventory.system.presentation.dashboard.DashboardScreen
+import com.inventory.system.presentation.exportimport.ExportImportScreen
 import com.inventory.system.presentation.products.AddEditProductScreen
 import com.inventory.system.presentation.products.ProductDetailScreen
 import com.inventory.system.presentation.products.ProductsScreen
 import com.inventory.system.presentation.reports.ReportsScreen
 import com.inventory.system.presentation.stock.StockOperationsScreen
 import com.inventory.system.presentation.categories.CategoriesScreen
+import com.inventory.system.presentation.users.UsersScreen
 import com.inventory.system.presentation.warehouses.AddEditWarehouseScreen
 import com.inventory.system.presentation.warehouses.WarehouseDetailScreen
 import com.inventory.system.presentation.warehouses.WarehousesScreen
@@ -67,30 +70,17 @@ fun InventoryNavHost() {
                         popUpTo(Screen.Main.route) { inclusive = true }
                     }
                 },
-                onNavigateToSettings = {
-                    navController.navigate(Screen.Settings.route)
-                },
-                onNavigateToProductDetail = { id ->
-                    navController.navigate(Screen.ProductDetail.createRoute(id))
-                },
-                onNavigateToAddProduct = {
-                    navController.navigate(Screen.AddEditProduct.createRoute())
-                },
-                onNavigateToEditProduct = { id ->
-                    navController.navigate(Screen.AddEditProduct.createRoute(id))
-                },
-                onNavigateToWarehouseDetail = { id ->
-                    navController.navigate(Screen.WarehouseDetail.createRoute(id))
-                },
-                onNavigateToAddWarehouse = {
-                    navController.navigate(Screen.AddEditWarehouse.createRoute())
-                }
+                onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
+                onNavigateToProductDetail = { id -> navController.navigate(Screen.ProductDetail.createRoute(id)) },
+                onNavigateToAddProduct = { navController.navigate(Screen.AddEditProduct.createRoute()) },
+                onNavigateToEditProduct = { id -> navController.navigate(Screen.AddEditProduct.createRoute(id)) },
+                onNavigateToWarehouseDetail = { id -> navController.navigate(Screen.WarehouseDetail.createRoute(id)) },
+                onNavigateToAddWarehouse = { navController.navigate(Screen.AddEditWarehouse.createRoute()) },
+                onNavigateToBarcodeScanner = { navController.navigate(Screen.BarcodeScanner.route) }
             )
         }
 
-        composable(
-            route = Screen.ProductDetail.route,
-        ) { backStackEntry ->
+        composable(route = Screen.ProductDetail.route) { backStackEntry ->
             val productId = backStackEntry.arguments?.getString("productId")?.toIntOrNull() ?: return@composable
             ProductDetailScreen(
                 productId = productId,
@@ -101,8 +91,10 @@ fun InventoryNavHost() {
 
         composable(route = Screen.AddEditProduct.route) { backStackEntry ->
             val productId = backStackEntry.arguments?.getString("productId")?.toIntOrNull()
+            val sku = backStackEntry.arguments?.getString("sku")
             AddEditProductScreen(
                 productId = productId,
+                initialSku = sku,
                 onNavigateBack = { navController.popBackStack() }
             )
         }
@@ -111,7 +103,8 @@ fun InventoryNavHost() {
             val warehouseId = backStackEntry.arguments?.getString("warehouseId")?.toIntOrNull() ?: return@composable
             WarehouseDetailScreen(
                 warehouseId = warehouseId,
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToEdit = { id -> navController.navigate(Screen.AddEditWarehouse.createRoute(id)) }
             )
         }
 
@@ -134,8 +127,28 @@ fun InventoryNavHost() {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Main.route) { inclusive = true }
                     }
-                }
+                },
+                onNavigateToUsers = { navController.navigate(Screen.Users.route) },
+                onNavigateToExportImport = { navController.navigate(Screen.ExportImport.route) }
             )
+        }
+
+        composable(route = Screen.BarcodeScanner.route) {
+            BarcodeScannerScreen(
+                onBarcodeScanned = { sku ->
+                    navController.popBackStack()
+                    navController.navigate(Screen.AddEditProductWithSku.createRouteWithSku(sku))
+                },
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(route = Screen.Users.route) {
+            UsersScreen(onNavigateBack = { navController.popBackStack() })
+        }
+
+        composable(route = Screen.ExportImport.route) {
+            ExportImportScreen(onNavigateBack = { navController.popBackStack() })
         }
     }
 }
@@ -148,7 +161,8 @@ fun MainScreen(
     onNavigateToAddProduct: () -> Unit,
     onNavigateToEditProduct: (Int) -> Unit,
     onNavigateToWarehouseDetail: (Int) -> Unit,
-    onNavigateToAddWarehouse: () -> Unit = {}
+    onNavigateToAddWarehouse: () -> Unit = {},
+    onNavigateToBarcodeScanner: () -> Unit = {}
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -182,14 +196,15 @@ fun MainScreen(
             composable(Screen.Dashboard.route) {
                 DashboardScreen(
                     onLogout = onNavigateToLogin,
-                    onNavigateToSettings = onNavigateToSettings
+                    onNavigateToSettings = onNavigateToSettings,
+                    onNavigateToBarcodeScanner = onNavigateToBarcodeScanner
                 )
             }
             composable(Screen.Products.route) {
-                val productsEntry = it
                 ProductsScreen(
                     onProductClick = onNavigateToProductDetail,
-                    onAddProduct = onNavigateToAddProduct
+                    onAddProduct = onNavigateToAddProduct,
+                    onBarcodeScanner = onNavigateToBarcodeScanner
                 )
             }
             composable(Screen.Warehouses.route) {

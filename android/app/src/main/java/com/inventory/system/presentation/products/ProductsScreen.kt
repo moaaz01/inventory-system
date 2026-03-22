@@ -26,6 +26,7 @@ import com.inventory.system.presentation.components.LoadingScreen
 fun ProductsScreen(
     onProductClick: (Int) -> Unit,
     onAddProduct: () -> Unit,
+    onBarcodeScanner: (() -> Unit)? = null,
     viewModel: ProductsViewModel = hiltViewModel()
 ) {
     val searchQuery by viewModel.searchQuery.collectAsState()
@@ -57,6 +58,11 @@ fun ProductsScreen(
                 actions = {
                     IconButton(onClick = { showFilterMenu = true }) {
                         Icon(Icons.Default.FilterList, null)
+                    }
+                    onBarcodeScanner?.let { scanner ->
+                        IconButton(onClick = scanner) {
+                            Icon(Icons.Default.QrCodeScanner, contentDescription = "مسح باركود")
+                        }
                     }
                     IconButton(onClick = onAddProduct) {
                         Icon(Icons.Default.Add, null)
