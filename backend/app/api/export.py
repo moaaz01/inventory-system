@@ -8,6 +8,8 @@ from app.database import get_db
 from app.models.product import Product
 from app.models.warehouse import Warehouse
 from app.models.stock import Stock
+from app.models.category import Category
+from app.models.unit import Unit
 from app.api.deps import require_admin, get_current_user
 from app.models.user import User
 
@@ -21,15 +23,20 @@ def export_products(db: Session = Depends(get_db), _: User = Depends(get_current
     products = db.query(Product).all()
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["id", "sku", "name", "category_id", "unit_id", "min_stock_level", "barcode", "description"])
+    writer.writerow(["id", "sku", "name", "category_id", "category_name", "unit_id", "unit_name", "min_stock_level", "barcode", "description"])
     for p in products:
-        writer.writerow([p.id, p.sku, p.name, p.category_id, p.unit_id, p.min_stock_level, p.barcode or "", p.description or ""])
+        writer.writerow([
+            p.id, p.sku, p.name,
+            p.category_id, p.category.name if p.category else "",
+            p.unit_id, p.unit.name if p.unit else "",
+            p.min_stock_level, p.barcode or "", p.description or ""
+        ])
     output.seek(0)
-    # UTF-8 with BOM for Excel Arabic support
-    content = "\ufeff" + output.getvalue()
+    # UTF-8 BOM for Excel Arabic support
+    content = output.getvalue()
     return StreamingResponse(
-        iter([content.encode("utf-8-sig")]),
-        media_type="text/csv; charset=utf-8",
+        iter([("\ufeff" + content).encode("utf-8-sig")]),
+        media_type="text/csv; charset=utf-8-sig",
         headers={"Content-Disposition": "attachment; filename=products.csv"}
     )
 
@@ -106,26 +113,61 @@ def export_all(db: Session = Depends(get_db), _: User = Depends(get_current_user
 
 @router.post("/api/import/products")
 def import_products(file: UploadFile = File(...), db: Session = Depends(get_db), _: User = Depends(require_admin)):
-    content = file.file.read().decode("utf-8")
+    raw = file.file.read()
+    # Handle UTF-8 BOM
+    content = raw.decode("utf-8-sig")
     reader = csv.DictReader(io.StringIO(content))
+    # Strip BOM from field names if present (extra safety)
+    fieldnames = reader.fieldnames
+    if fieldnames:
+        reader.fieldnames = [f.lstrip("\ufeff").strip() for f in fieldnames]
+
+    # Build lookup caches
+    categories = {c.name.strip().lower(): c.id for c in db.query(Category).all()}
+    units = {u.name.strip().lower(): u.id for u in db.query(Unit).all()}
+
     created = updated = failed = 0
     errors = []
     for i, row in enumerate(reader, start=2):
         try:
-            row_id = row.get("id", "").strip()
+            # Strip all values
+            row = {k: (v.strip() if v else "") for k, v in row.items()}
+
+            # Resolve category_id: prefer name, fall back to id column
+            category_id = None
+            cat_name = row.get("category_name", "")
+            cat_id_raw = row.get("category_id", "")
+            if cat_name and cat_name.lower() in categories:
+                category_id = categories[cat_name.lower()]
+            elif cat_id_raw.isdigit():
+                category_id = int(cat_id_raw)
+
+            # Resolve unit_id: prefer name, fall back to id column
+            unit_id = None
+            unit_name = row.get("unit_name", "")
+            unit_id_raw = row.get("unit_id", "")
+            if unit_name and unit_name.lower() in units:
+                unit_id = units[unit_name.lower()]
+            elif unit_id_raw.isdigit():
+                unit_id = int(unit_id_raw)
+
+            row_id = row.get("id", "")
             if row_id and row_id.isdigit():
                 existing = db.query(Product).filter(Product.id == int(row_id)).first()
                 if existing:
-                    if "sku" in row and row["sku"]: existing.sku = row["sku"].strip()
-                    if "name" in row and row["name"]: existing.name = row["name"].strip()
-                    if "category_id" in row and row["category_id"]: existing.category_id = int(row["category_id"]) if row["category_id"].strip().isdigit() else existing.category_id
-                    if "unit_id" in row and row["unit_id"]: existing.unit_id = int(row["unit_id"]) if row["unit_id"].strip().isdigit() else existing.unit_id
-                    if "min_stock_level" in row and row["min_stock_level"]: existing.min_stock_level = int(row["min_stock_level"]) if row["min_stock_level"].strip().isdigit() else existing.min_stock_level
+                    if row.get("sku"): existing.sku = row["sku"]
+                    if row.get("name"): existing.name = row["name"]
+                    if category_id is not None: existing.category_id = category_id
+                    if unit_id is not None: existing.unit_id = unit_id
+                    if row.get("min_stock_level") and row["min_stock_level"].isdigit():
+                        existing.min_stock_level = int(row["min_stock_level"])
+                    if row.get("description"): existing.description = row["description"]
+                    if row.get("barcode"): existing.barcode = row["barcode"]
                     updated += 1
                     continue
-            # Create new
-            sku = row.get("sku", "").strip()
-            name = row.get("name", "").strip()
+
+            sku = row.get("sku", "")
+            name = row.get("name", "")
             if not sku or not name:
                 raise ValueError("sku and name are required")
             if db.query(Product).filter(Product.sku == sku).first():
@@ -133,9 +175,11 @@ def import_products(file: UploadFile = File(...), db: Session = Depends(get_db),
             p = Product(
                 sku=sku,
                 name=name,
-                category_id=int(row["category_id"]) if row.get("category_id", "").strip().isdigit() else None,
-                unit_id=int(row["unit_id"]) if row.get("unit_id", "").strip().isdigit() else None,
-                min_stock_level=int(row["min_stock_level"]) if row.get("min_stock_level", "").strip().isdigit() else 10,
+                description=row.get("description") or None,
+                barcode=row.get("barcode") or None,
+                category_id=category_id,
+                unit_id=unit_id,
+                min_stock_level=int(row["min_stock_level"]) if row.get("min_stock_level", "").isdigit() else 10,
             )
             db.add(p)
             created += 1
@@ -148,7 +192,7 @@ def import_products(file: UploadFile = File(...), db: Session = Depends(get_db),
 
 @router.post("/api/import/warehouses")
 def import_warehouses(file: UploadFile = File(...), db: Session = Depends(get_db), _: User = Depends(require_admin)):
-    content = file.file.read().decode("utf-8")
+    content = file.file.read().decode("utf-8-sig")
     reader = csv.DictReader(io.StringIO(content))
     created = updated = failed = 0
     errors = []
@@ -177,7 +221,7 @@ def import_warehouses(file: UploadFile = File(...), db: Session = Depends(get_db
 
 @router.post("/api/import/stock")
 def import_stock(file: UploadFile = File(...), db: Session = Depends(get_db), _: User = Depends(require_admin)):
-    content = file.file.read().decode("utf-8")
+    content = file.file.read().decode("utf-8-sig")
     reader = csv.DictReader(io.StringIO(content))
     created = updated = failed = 0
     errors = []

@@ -4,11 +4,30 @@ from sqlalchemy import or_
 from typing import Optional
 from app.database import get_db
 from app.models.product import Product
+from app.models.category import Category
 from app.schemas.product import ProductCreate, ProductUpdate, ProductResponse, ProductListResponse, StockInfo
 from app.api.deps import get_current_user, require_admin
 from app.models.user import User
 
 router = APIRouter(prefix="/api/products", tags=["products"])
+
+
+def _generate_sku(category_id: Optional[int], db: Session) -> str:
+    """Auto-generate a unique SKU based on category prefix."""
+    prefix = "PROD"
+    if category_id:
+        cat = db.query(Category).filter(Category.id == category_id).first()
+        if cat:
+            prefix = cat.name[:4].upper()
+    existing = db.query(Product).filter(Product.sku.like(f"{prefix}-%")).all()
+    max_num = 0
+    for p in existing:
+        try:
+            num = int(p.sku.split("-")[-1])
+            max_num = max(max_num, num)
+        except Exception:
+            pass
+    return f"{prefix}-{max_num + 1:04d}"
 
 
 def enrich_product(p: Product) -> ProductResponse:
@@ -79,6 +98,25 @@ def list_products(
     return ProductListResponse(items=[enrich_product(p) for p in items], total=total, page=page, size=size)
 
 
+@router.get("/next-sku/{category_id}")
+def get_next_sku(category_id: int, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+    """Get next available SKU for a category."""
+    cat = db.query(Category).filter(Category.id == category_id).first()
+    if not cat:
+        raise HTTPException(404, "Category not found")
+    prefix = cat.name[:4].upper()
+    existing = db.query(Product).filter(Product.sku.like(f"{prefix}-%")).all()
+    max_num = 0
+    for p in existing:
+        try:
+            num = int(p.sku.split("-")[-1])
+            max_num = max(max_num, num)
+        except Exception:
+            pass
+    next_num = max_num + 1
+    return {"sku": f"{prefix}-{next_num:04d}", "prefix": prefix}
+
+
 @router.get("/{id}", response_model=ProductResponse)
 def get_product(id: int, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
     p = db.query(Product).filter(Product.id == id).first()
@@ -89,9 +127,12 @@ def get_product(id: int, db: Session = Depends(get_db), _: User = Depends(get_cu
 
 @router.post("", response_model=ProductResponse, status_code=201)
 def create_product(data: ProductCreate, db: Session = Depends(get_db), _: User = Depends(require_admin)):
-    if db.query(Product).filter(Product.sku == data.sku).first():
+    sku = data.sku if data.sku else _generate_sku(data.category_id, db)
+    if db.query(Product).filter(Product.sku == sku).first():
         raise HTTPException(400, "SKU already exists")
-    p = Product(**data.model_dump())
+    product_data = data.model_dump()
+    product_data["sku"] = sku
+    p = Product(**product_data)
     db.add(p)
     db.commit()
     db.refresh(p)

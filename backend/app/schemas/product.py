@@ -4,7 +4,7 @@ from datetime import datetime
 
 
 class ProductBase(BaseModel):
-    sku: str
+    sku: Optional[str] = None
     name: str
     description: Optional[str] = None
     category_id: Optional[int] = None
