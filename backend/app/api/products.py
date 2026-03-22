@@ -115,5 +115,27 @@ def delete_product(id: int, db: Session = Depends(get_db), _: User = Depends(req
     p = db.query(Product).filter(Product.id == id).first()
     if not p:
         raise HTTPException(404, "Product not found")
+
+    # Check if there are stock movements - redirect them to a deleted placeholder
+    from app.models.movement import StockMovement
+    from app.models.stock import Stock
+    deleted_product = db.query(Product).filter(Product.sku == "__DELETED__").first()
+    if not deleted_product:
+        deleted_product = Product(
+            sku="__DELETED__",
+            name="[محذوف]",
+            description="تم حذف هذا المنتج",
+            min_stock_level=0,
+        )
+        db.add(deleted_product)
+        db.commit()
+        db.refresh(deleted_product)
+
+    # Update movements to point to deleted product
+    db.query(StockMovement).filter(StockMovement.product_id == id).update(
+        {"product_id": deleted_product.id}
+    )
+    # Delete stock entries for this product
+    db.query(Stock).filter(Stock.product_id == id).delete()
     db.delete(p)
     db.commit()
