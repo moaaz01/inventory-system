@@ -170,18 +170,54 @@ fun ProductDropdown(
     onExpandedChange: (Boolean) -> Unit,
     onSelect: (Product) -> Unit
 ) {
+    var searchQuery by remember { mutableStateOf(selected?.name ?: "") }
+    var filteredProducts by remember { mutableStateOf(products) }
+
+    LaunchedEffect(products) {
+        filteredProducts = if (searchQuery.isBlank()) products
+        else products.filter { p -> p.name.contains(searchQuery, ignoreCase = true) || p.sku.contains(searchQuery, ignoreCase = true) }
+    }
+
+    LaunchedEffect(selected) {
+        if (selected != null) searchQuery = selected.name
+    }
+
     ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = onExpandedChange) {
         OutlinedTextField(
-            value = selected?.name ?: "اختر المنتج",
-            onValueChange = {},
-            readOnly = true,
+            value = searchQuery,
+            onValueChange = { query ->
+                searchQuery = query
+                filteredProducts = if (query.isBlank()) products
+                else products.filter { p -> p.name.contains(query, ignoreCase = true) || p.sku.contains(query, ignoreCase = true) }
+                onExpandedChange(true)
+            },
+            readOnly = false,
             label = { Text(label) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier.fillMaxWidth().menuAnchor()
+            modifier = Modifier.fillMaxWidth().menuAnchor(),
+            singleLine = true
         )
         ExposedDropdownMenu(expanded = expanded, onDismissRequest = { onExpandedChange(false) }) {
-            products.forEach { product ->
-                DropdownMenuItem(text = { Text("${product.name} (${product.sku})") }, onClick = { onSelect(product) })
+            val displayProducts = if (searchQuery.isBlank()) products.take(50) else filteredProducts.take(50)
+            displayProducts.forEach { product ->
+                DropdownMenuItem(
+                    text = {
+                        Column {
+                            Text(product.name, style = MaterialTheme.typography.bodyMedium)
+                            Text(product.sku, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    },
+                    onClick = {
+                        searchQuery = product.name
+                        onSelect(product)
+                    }
+                )
+            }
+            if (displayProducts.isEmpty()) {
+                DropdownMenuItem(
+                    text = { Text("لا توجد نتائج") },
+                    onClick = { onExpandedChange(false) }
+                )
             }
         }
     }
@@ -197,18 +233,49 @@ fun WarehouseDropdown(
     onExpandedChange: (Boolean) -> Unit,
     onSelect: (Warehouse) -> Unit
 ) {
+    var searchQuery by remember { mutableStateOf(selected?.name ?: "") }
+    var filteredWarehouses by remember { mutableStateOf(warehouses) }
+
+    LaunchedEffect(warehouses) {
+        filteredWarehouses = if (searchQuery.isBlank()) warehouses
+        else warehouses.filter { w -> w.name.contains(searchQuery, ignoreCase = true) }
+    }
+
+    LaunchedEffect(selected) {
+        if (selected != null) searchQuery = selected.name
+    }
+
     ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = onExpandedChange) {
         OutlinedTextField(
-            value = selected?.name ?: "اختر المستودع",
-            onValueChange = {},
-            readOnly = true,
+            value = searchQuery,
+            onValueChange = { query ->
+                searchQuery = query
+                filteredWarehouses = if (query.isBlank()) warehouses
+                else warehouses.filter { w -> w.name.contains(query, ignoreCase = true) }
+                onExpandedChange(true)
+            },
+            readOnly = false,
             label = { Text(label) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier.fillMaxWidth().menuAnchor()
+            modifier = Modifier.fillMaxWidth().menuAnchor(),
+            singleLine = true
         )
         ExposedDropdownMenu(expanded = expanded, onDismissRequest = { onExpandedChange(false) }) {
-            warehouses.forEach { warehouse ->
-                DropdownMenuItem(text = { Text(warehouse.name) }, onClick = { onSelect(warehouse) })
+            val displayWarehouses = if (searchQuery.isBlank()) warehouses.take(50) else filteredWarehouses.take(50)
+            displayWarehouses.forEach { warehouse ->
+                DropdownMenuItem(
+                    text = { Text(warehouse.name, style = MaterialTheme.typography.bodyMedium) },
+                    onClick = {
+                        searchQuery = warehouse.name
+                        onSelect(warehouse)
+                    }
+                )
+            }
+            if (displayWarehouses.isEmpty()) {
+                DropdownMenuItem(
+                    text = { Text("لا توجد نتائج") },
+                    onClick = { onExpandedChange(false) }
+                )
             }
         }
     }
