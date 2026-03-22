@@ -109,7 +109,10 @@ class ProductsViewModel @Inject constructor(
     fun deleteProduct(id: Int) {
         viewModelScope.launch {
             when (val r = productRepository.deleteProduct(id)) {
-                is Result.Success -> _uiState.update { it.copy(actionSuccess = true) }
+                is Result.Success -> {
+                    refreshProducts()  // Refresh the list
+                    _uiState.update { it.copy(actionSuccess = true) }
+                }
                 is Result.Error -> _uiState.update { it.copy(actionError = r.message) }
                 is Result.Loading -> {}
             }
