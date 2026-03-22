@@ -20,7 +20,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000", "http://localhost:8080", "http://10.0.2.2:8000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

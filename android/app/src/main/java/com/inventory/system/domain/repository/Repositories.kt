@@ -2,6 +2,7 @@ package com.inventory.system.domain.repository
 
 import androidx.paging.PagingData
 import com.inventory.system.domain.model.*
+import com.inventory.system.domain.model.Unit as InventoryUnit
 import kotlinx.coroutines.flow.Flow
 
 interface AuthRepository {
@@ -53,6 +54,6 @@ interface ReportRepository {
 }
 
 interface UnitRepository {
-    suspend fun getUnits(): Result<List<Unit>>
-    fun getCachedUnits(): Flow<List<Unit>>
+    suspend fun getUnits(): Result<List<InventoryUnit>>
+    fun getCachedUnits(): Flow<List<InventoryUnit>>
 }

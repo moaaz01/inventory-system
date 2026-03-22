@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.inventory.system.domain.model.*
+import com.inventory.system.domain.model.Unit as InventoryUnit
 import com.inventory.system.domain.repository.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -16,7 +17,7 @@ data class ProductsUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val categories: List<Category> = emptyList(),
-    val units: List<Unit> = emptyList(),
+    val units: List<InventoryUnit> = emptyList(),
     val selectedProduct: Product? = null,
     val actionSuccess: Boolean = false,
     val actionError: String? = null

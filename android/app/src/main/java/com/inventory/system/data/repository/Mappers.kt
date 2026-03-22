@@ -3,7 +3,7 @@ package com.inventory.system.data.repository
 import com.inventory.system.data.local.entity.*
 import com.inventory.system.data.remote.dto.*
 import com.inventory.system.domain.model.*
-import com.inventory.system.domain.model.Unit
+import com.inventory.system.domain.model.Unit as InventoryUnit
 
 // DTO -> Domain
 fun ProductDto.toDomain() = Product(
@@ -25,7 +25,7 @@ fun CategoryDto.toDomain(): Category = Category(
     children = children?.map { it.toDomain() } ?: emptyList()
 )
 
-fun UnitDto.toDomain() = Unit(id = id, name = name, symbol = symbol)
+fun UnitDto.toDomain() = InventoryUnit(id = id, name = name, symbol = symbol)
 
 fun WarehouseDto.toDomain() = Warehouse(
     id = id,
@@ -100,4 +100,4 @@ fun CategoryEntity.toDomain() = Category(id = id, name = name, parentId = parent
 
 fun WarehouseEntity.toDomain() = Warehouse(id = id, name = name, location = location)
 
-fun UnitEntity.toDomain() = Unit(id = id, name = name, symbol = symbol)
+fun UnitEntity.toDomain() = InventoryUnit(id = id, name = name, symbol = symbol)

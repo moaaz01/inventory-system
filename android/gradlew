@@ -1,0 +1,4 @@
+#!/bin/sh
+# Wrapper script to use local gradle installation
+export ANDROID_HOME="${ANDROID_HOME:-$HOME/android-sdk}"
+exec "$HOME/gradle-8.7/bin/gradle" "$@"
