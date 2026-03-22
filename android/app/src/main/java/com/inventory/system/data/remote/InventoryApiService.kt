@@ -1,6 +1,7 @@
 package com.inventory.system.data.remote
 
 import com.inventory.system.data.remote.dto.*
+import retrofit2.Response
 import retrofit2.http.*
 
 interface InventoryApiService {
@@ -34,7 +35,7 @@ interface InventoryApiService {
     suspend fun updateProduct(@Path("id") id: Int, @Body request: ProductCreateRequest): ProductDto
 
     @DELETE("api/products/{id}")
-    suspend fun deleteProduct(@Path("id") id: Int)
+    suspend fun deleteProduct(@Path("id") id: Int): Response<Unit>
 
     // Categories
     @GET("api/categories")
@@ -47,7 +48,7 @@ interface InventoryApiService {
     suspend fun updateCategory(@Path("id") id: Int, @Body body: Map<String, String>): CategoryDto
 
     @DELETE("api/categories/{id}")
-    suspend fun deleteCategory(@Path("id") id: Int)
+    suspend fun deleteCategory(@Path("id") id: Int): Response<Unit>
 
     // Units
     @GET("api/units")
@@ -70,7 +71,7 @@ interface InventoryApiService {
     suspend fun updateWarehouse(@Path("id") id: Int, @Body body: Map<String, String>): WarehouseDto
 
     @DELETE("api/warehouses/{id}")
-    suspend fun deleteWarehouse(@Path("id") id: Int)
+    suspend fun deleteWarehouse(@Path("id") id: Int): Response<Unit>
 
     // Stock
     @GET("api/stock")
@@ -153,5 +154,5 @@ interface InventoryApiService {
     suspend fun updateUser(@Path("id") id: Int, @Body data: UpdateUserRequest): UserDto
 
     @DELETE("api/users/{id}")
-    suspend fun deleteUser(@Path("id") id: Int)
+    suspend fun deleteUser(@Path("id") id: Int): Response<Unit>
 }
