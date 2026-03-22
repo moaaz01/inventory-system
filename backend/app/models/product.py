@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, Numeric
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
@@ -16,6 +16,9 @@ class Product(Base):
     min_stock_level = Column(Integer, default=10)
     barcode = Column(String(100))
     image_url = Column(String(500))
+    retail_price = Column(Numeric(10, 2), nullable=True)
+    wholesale_price = Column(Numeric(10, 2), nullable=True)
+    currency = Column(String(3), default="USD")
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 

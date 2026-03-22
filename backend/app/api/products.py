@@ -31,6 +31,9 @@ def enrich_product(p: Product) -> ProductResponse:
         stock=stock_info,
         category_name=p.category.name if p.category else None,
         unit_name=p.unit.name if p.unit else None,
+        retail_price=float(p.retail_price) if p.retail_price is not None else None,
+        wholesale_price=float(p.wholesale_price) if p.wholesale_price is not None else None,
+        currency=p.currency or "USD",
     )
 
 

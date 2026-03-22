@@ -12,6 +12,9 @@ class ProductBase(BaseModel):
     min_stock_level: int = 10
     barcode: Optional[str] = None
     image_url: Optional[str] = None
+    retail_price: Optional[float] = None
+    wholesale_price: Optional[float] = None
+    currency: str = "USD"
 
 
 class ProductCreate(ProductBase):
@@ -26,6 +29,9 @@ class ProductUpdate(BaseModel):
     min_stock_level: Optional[int] = None
     barcode: Optional[str] = None
     image_url: Optional[str] = None
+    retail_price: Optional[float] = None
+    wholesale_price: Optional[float] = None
+    currency: Optional[str] = None
 
 
 class StockInfo(BaseModel):
