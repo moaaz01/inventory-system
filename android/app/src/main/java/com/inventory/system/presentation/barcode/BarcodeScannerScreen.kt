@@ -51,6 +51,7 @@ fun BarcodeScannerScreen(
                 viewModel.searchBySku(code)
             }
         }
+        // If cancelled or back pressed, just stay on this screen
     }
 
     // Camera permission for ZXing fallback
