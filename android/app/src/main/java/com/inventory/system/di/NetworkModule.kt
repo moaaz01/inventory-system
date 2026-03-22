@@ -23,7 +23,7 @@ object NetworkModule {
     // NOTE: Change this to your server IP address
     // For emulator: use 10.0.2.2 to access host machine localhost
     // For real device: use your machine's local IP (e.g., 192.168.x.x)
-    private const val BASE_URL = "http://10.0.2.2:8000/"
+    private const val BASE_URL = "http://192.168.1.105:8000/"
 
     @Provides
     @Singleton
