@@ -39,13 +39,38 @@ suspend fun <T> safeApiCall(call: suspend () -> T): Result<T> {
     return try {
         Result.Success(call())
     } catch (e: retrofit2.HttpException) {
-        val msg = try {
+        val rawMsg = try {
             e.response()?.errorBody()?.string() ?: e.message()
         } catch (_: Exception) { e.message() }
-        Result.Error(msg)
+        val friendlyMsg = translateApiError(rawMsg, e.code())
+        Result.Error(friendlyMsg)
     } catch (e: java.io.IOException) {
         Result.Error("خطأ في الاتصال بالشبكة")
     } catch (e: Exception) {
         Result.Error(e.message ?: "خطأ غير معروف")
+    }
+}
+
+private fun translateApiError(raw: String?, httpCode: Int): String {
+    if (raw == null) return "حدث خطأ غير متوقع"
+    return when {
+        raw.contains("Admin access required", ignoreCase = true) ->
+            "ليس لديك صلاحية_manager_access لهذا الإجراء.\nيرجى التواصل مع مدير النظام."
+        raw.contains("Not authenticated", ignoreCase = true) ||
+        raw.contains("Invalid or expired token", ignoreCase = true) ->
+            "انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى."
+        raw.contains("Not Found", ignoreCase = true) && httpCode == 404 ->
+            "المورد المطلوب غير موجود"
+        raw.contains("Bad Request", ignoreCase = true) || httpCode == 400 ->
+            "بيانات غير صحيحة. يرجى التحقق من المدخلات."
+        raw.contains("Rate limit", ignoreCase = true) ->
+            "محاولات كثيرة. يرجى الانتظار دقيقة قبل المحاولة."
+        raw.contains("duplicate", ignoreCase = true) ||
+        raw.contains("already exists", ignoreCase = true) ->
+            "هذا العنصر موجود بالفعل"
+        raw.contains("foreign key", ignoreCase = true) ||
+        raw.contains("constraint", ignoreCase = true) ->
+            "لا يمكن تنفيذ هذا الإجراء بسبب ارتباطه ببيانات أخرى"
+        else -> raw
     }
 }

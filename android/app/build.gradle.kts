@@ -108,7 +108,7 @@ dependencies {
     // Coil
     implementation(libs.coil.compose)
 
-    // CameraX + ML Kit barcode (requires internet to download deps)
+    // CameraX + ML Kit barcode (requires internet to download - build on machine with internet)
     // implementation("com.google.mlkit:barcode-scanning:17.2.0")
     // implementation("androidx.camera:camera-camera2:1.3.1")
     // implementation("androidx.camera:camera-lifecycle:1.3.1")
