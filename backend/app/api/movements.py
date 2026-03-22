@@ -11,7 +11,7 @@ from app.schemas.movement import (
     MovementResponse, MovementListResponse,
     ReceiptRequest, IssueRequest, TransferRequest,
 )
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, require_admin
 from app.models.user import User
 
 router = APIRouter(prefix="/api/movements", tags=["movements"])
@@ -72,7 +72,7 @@ def list_movements(
 
 
 @router.post("/receipt", response_model=MovementResponse, status_code=201)
-def receipt(data: ReceiptRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def receipt(data: ReceiptRequest, db: Session = Depends(get_db), current_user: User = Depends(require_admin)):
     if not db.query(Product).filter(Product.id == data.product_id).first():
         raise HTTPException(404, "Product not found")
     if not db.query(Warehouse).filter(Warehouse.id == data.warehouse_id).first():
@@ -97,7 +97,7 @@ def receipt(data: ReceiptRequest, db: Session = Depends(get_db), current_user: U
 
 
 @router.post("/issue", response_model=MovementResponse, status_code=201)
-def issue(data: IssueRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def issue(data: IssueRequest, db: Session = Depends(get_db), current_user: User = Depends(require_admin)):
     if not db.query(Product).filter(Product.id == data.product_id).first():
         raise HTTPException(404, "Product not found")
     stock = get_or_create_stock(db, data.product_id, data.warehouse_id)
@@ -121,7 +121,7 @@ def issue(data: IssueRequest, db: Session = Depends(get_db), current_user: User 
 
 
 @router.post("/transfer", response_model=MovementResponse, status_code=201)
-def transfer(data: TransferRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def transfer(data: TransferRequest, db: Session = Depends(get_db), current_user: User = Depends(require_admin)):
     if data.from_warehouse_id == data.to_warehouse_id:
         raise HTTPException(400, "Source and destination warehouses must differ")
     if not db.query(Product).filter(Product.id == data.product_id).first():
