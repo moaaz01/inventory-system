@@ -33,6 +33,8 @@ fun ProductsScreen(
     val uiState by viewModel.uiState.collectAsState()
     val products = viewModel.products.collectAsLazyPagingItems()
     var showFilterMenu by remember { mutableStateOf(false) }
+    var isMultiSelectMode by remember { mutableStateOf(false) }
+    var selectedIds by remember { mutableStateOf(setOf<Int>()) }
 
     // Refresh products when screen resumes (e.g. after adding a product)
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -51,31 +53,75 @@ fun ProductsScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
+    // Build the display list for multi-select mode
+    val allProducts = (0 until products.itemCount).mapNotNull { products[it] }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("المنتجات") },
+                title = {
+                    if (isMultiSelectMode) {
+                        Text("${selectedIds.size} محدد")
+                    } else {
+                        Text("المنتجات")
+                    }
+                },
                 actions = {
-                    IconButton(onClick = { showFilterMenu = true }) {
-                        Icon(Icons.Default.FilterList, null)
-                    }
-                    onBarcodeScanner?.let { scanner ->
-                        IconButton(onClick = scanner) {
-                            Icon(Icons.Default.QrCodeScanner, contentDescription = "مسح باركود")
+                    if (isMultiSelectMode) {
+                        // Select all / deselect all
+                        IconButton(onClick = {
+                            selectedIds = if (selectedIds.size == allProducts.size) {
+                                emptySet()
+                            } else {
+                                allProducts.map { it.id }.toSet()
+                            }
+                        }) {
+                            Icon(Icons.Default.SelectAll, contentDescription = "تحديد الكل")
                         }
-                    }
-                    IconButton(onClick = onAddProduct) {
-                        Icon(Icons.Default.Add, null)
-                    }
+                        // Delete selected
+                        IconButton(onClick = {
+                            if (selectedIds.isNotEmpty()) {
+                                selectedIds.forEach { viewModel.deleteProduct(it) }
+                                selectedIds = emptySet()
+                                isMultiSelectMode = false
+                                viewModel.refreshProducts()
+                            }
+                        }) {
+                            Icon(Icons.Default.Delete, contentDescription = "حذف المحدد", tint = MaterialTheme.colorScheme.error)
+                        }
+                        // Cancel
+                        IconButton(onClick = {
+                            isMultiSelectMode = false
+                            selectedIds = emptySet()
+                        }) {
+                            Icon(Icons.Default.Close, contentDescription = "إلغاء")
+                        }
+                    } else {
+                        // Multi-select toggle
+                        IconButton(onClick = { isMultiSelectMode = true }) {
+                            Icon(Icons.Default.Checklist, contentDescription = "تحديد متعدد")
+                        }
+                        IconButton(onClick = { showFilterMenu = true }) {
+                            Icon(Icons.Default.FilterList, null)
+                        }
+                        onBarcodeScanner?.let { scanner ->
+                            IconButton(onClick = scanner) {
+                                Icon(Icons.Default.QrCodeScanner, contentDescription = "مسح باركود")
+                            }
+                        }
+                        IconButton(onClick = onAddProduct) {
+                            Icon(Icons.Default.Add, null)
+                        }
 
-                    DropdownMenu(expanded = showFilterMenu, onDismissRequest = { showFilterMenu = false }) {
-                        DropdownMenuItem(text = { Text("الكل") }, onClick = {
-                            viewModel.setCategory(null); showFilterMenu = false
-                        })
-                        uiState.categories.forEach { cat ->
-                            DropdownMenuItem(text = { Text(cat.name) }, onClick = {
-                                viewModel.setCategory(cat.id); showFilterMenu = false
+                        DropdownMenu(expanded = showFilterMenu, onDismissRequest = { showFilterMenu = false }) {
+                            DropdownMenuItem(text = { Text("الكل") }, onClick = {
+                                viewModel.setCategory(null); showFilterMenu = false
                             })
+                            uiState.categories.forEach { cat ->
+                                DropdownMenuItem(text = { Text(cat.name) }, onClick = {
+                                    viewModel.setCategory(cat.id); showFilterMenu = false
+                                })
+                            }
                         }
                     }
                 }
@@ -83,21 +129,23 @@ fun ProductsScreen(
         }
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = viewModel::setSearchQuery,
-                placeholder = { Text("بحث عن منتج...") },
-                leadingIcon = { Icon(Icons.Default.Search, null) },
-                trailingIcon = {
-                    if (searchQuery.isNotEmpty()) {
-                        IconButton(onClick = { viewModel.setSearchQuery("") }) {
-                            Icon(Icons.Default.Clear, null)
+            if (!isMultiSelectMode) {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = viewModel::setSearchQuery,
+                    placeholder = { Text("بحث عن منتج...") },
+                    leadingIcon = { Icon(Icons.Default.Search, null) },
+                    trailingIcon = {
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { viewModel.setSearchQuery("") }) {
+                                Icon(Icons.Default.Clear, null)
+                            }
                         }
-                    }
-                },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                singleLine = true
-            )
+                    },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                    singleLine = true
+                )
+            }
 
             when (products.loadState.refresh) {
                 is LoadState.Loading -> LoadingScreen()
@@ -116,13 +164,27 @@ fun ProductsScreen(
                         LazyColumn(modifier = Modifier.fillMaxSize()) {
                             items(products.itemCount) { index ->
                                 products[index]?.let { product ->
-                                    ProductListItem(product = product, onClick = { onProductClick(product.id) })
+                                    ProductListItem(
+                                        product = product,
+                                        isMultiSelectMode = isMultiSelectMode,
+                                        isSelected = selectedIds.contains(product.id),
+                                        onCheckedChange = { checked ->
+                                            selectedIds = if (checked) selectedIds + product.id else selectedIds - product.id
+                                        },
+                                        onClick = {
+                                            if (isMultiSelectMode) {
+                                                val checked = !selectedIds.contains(product.id)
+                                                selectedIds = if (checked) selectedIds + product.id else selectedIds - product.id
+                                            } else {
+                                                onProductClick(product.id)
+                                            }
+                                        }
+                                    )
                                 }
                             }
                             when (products.loadState.append) {
                                 is LoadState.Loading -> item { Box(Modifier.fillMaxWidth().padding(8.dp), Alignment.Center) { CircularProgressIndicator() } }
                                 is LoadState.Error -> item {
-                                    val error = (products.loadState.append as LoadState.Error).error
                                     Box(Modifier.fillMaxWidth().padding(8.dp), Alignment.Center) {
                                         TextButton(onClick = { products.retry() }) { Text("إعادة المحاولة") }
                                     }
@@ -138,17 +200,33 @@ fun ProductsScreen(
 }
 
 @Composable
-fun ProductListItem(product: Product, onClick: () -> Unit) {
+fun ProductListItem(
+    product: Product,
+    onClick: () -> Unit,
+    isMultiSelectMode: Boolean = false,
+    isSelected: Boolean = false,
+    onCheckedChange: ((Boolean) -> Unit)? = null
+) {
     val totalStock = product.stockInfo.sumOf { it.quantity }
     val isLow = totalStock <= product.minStockLevel
     Card(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
-            containerColor = if (isLow) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.25f)
-                             else MaterialTheme.colorScheme.surface
+            containerColor = when {
+                isSelected -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+                isLow -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.25f)
+                else -> MaterialTheme.colorScheme.surface
+            }
         )
     ) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (isMultiSelectMode) {
+                Checkbox(
+                    checked = isSelected,
+                    onCheckedChange = onCheckedChange,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+            }
             Column(modifier = Modifier.weight(1f)) {
                 Text(product.name, style = MaterialTheme.typography.titleSmall)
                 Text("SKU: ${product.sku}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

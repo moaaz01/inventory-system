@@ -24,22 +24,65 @@ fun WarehousesScreen(
     viewModel: WarehouseViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var isMultiSelectMode by remember { mutableStateOf(false) }
+    var selectedWarehouseIds by remember { mutableStateOf(setOf<Int>()) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("المستودعات") },
+                title = {
+                    if (isMultiSelectMode) {
+                        Text("${selectedWarehouseIds.size} محدد")
+                    } else {
+                        Text("المستودعات")
+                    }
+                },
                 actions = {
-                    IconButton(onClick = viewModel::loadWarehouses) {
-                        Icon(Icons.Default.Refresh, null)
+                    if (isMultiSelectMode) {
+                        // Select all / deselect all
+                        IconButton(onClick = {
+                            selectedWarehouseIds = if (selectedWarehouseIds.size == uiState.warehouses.size) {
+                                emptySet()
+                            } else {
+                                uiState.warehouses.map { it.id }.toSet()
+                            }
+                        }) {
+                            Icon(Icons.Default.SelectAll, contentDescription = "تحديد الكل")
+                        }
+                        // Delete selected
+                        IconButton(onClick = {
+                            if (selectedWarehouseIds.isNotEmpty()) {
+                                selectedWarehouseIds.forEach { viewModel.deleteWarehouse(it) }
+                                selectedWarehouseIds = emptySet()
+                                isMultiSelectMode = false
+                            }
+                        }) {
+                            Icon(Icons.Default.Delete, contentDescription = "حذف المحدد", tint = MaterialTheme.colorScheme.error)
+                        }
+                        // Cancel
+                        IconButton(onClick = {
+                            isMultiSelectMode = false
+                            selectedWarehouseIds = emptySet()
+                        }) {
+                            Icon(Icons.Default.Close, contentDescription = "إلغاء")
+                        }
+                    } else {
+                        IconButton(onClick = { isMultiSelectMode = true }) {
+                            Icon(Icons.Default.Checklist, contentDescription = "تحديد متعدد")
+                        }
+                        IconButton(onClick = viewModel::loadWarehouses) {
+                            Icon(Icons.Default.Refresh, null)
+                        }
                     }
                 }
             )
         },
         floatingActionButton = {
-            onAddWarehouse?.let {
-                FloatingActionButton(onClick = it) {
-                    Icon(Icons.Default.Add, contentDescription = "إضافة مستودع")
+            if (!isMultiSelectMode) {
+                onAddWarehouse?.let {
+                    FloatingActionButton(onClick = it) {
+                        Icon(Icons.Default.Add, contentDescription = "إضافة مستودع")
+                    }
                 }
             }
         }
@@ -50,13 +93,40 @@ fun WarehousesScreen(
             uiState.warehouses.isEmpty() -> EmptyScreen("لا توجد مستودعات", modifier = Modifier.padding(padding))
             else -> LazyColumn(modifier = Modifier.fillMaxSize().padding(padding)) {
                 items(uiState.warehouses) { warehouse ->
+                    val isSelected = selectedWarehouseIds.contains(warehouse.id)
                     Card(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
-                            .clickable { onWarehouseClick(warehouse.id) }
+                            .clickable {
+                                if (isMultiSelectMode) {
+                                    selectedWarehouseIds = if (isSelected)
+                                        selectedWarehouseIds - warehouse.id
+                                    else
+                                        selectedWarehouseIds + warehouse.id
+                                } else {
+                                    onWarehouseClick(warehouse.id)
+                                }
+                            },
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+                                             else MaterialTheme.colorScheme.surface
+                        )
                     ) {
                         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Warehouse, null, tint = MaterialTheme.colorScheme.primary)
-                            Spacer(Modifier.width(12.dp))
+                            if (isMultiSelectMode) {
+                                Checkbox(
+                                    checked = isSelected,
+                                    onCheckedChange = { checked ->
+                                        selectedWarehouseIds = if (checked)
+                                            selectedWarehouseIds + warehouse.id
+                                        else
+                                            selectedWarehouseIds - warehouse.id
+                                    },
+                                    modifier = Modifier.padding(end = 8.dp)
+                                )
+                            } else {
+                                Icon(Icons.Default.Warehouse, null, tint = MaterialTheme.colorScheme.primary)
+                                Spacer(Modifier.width(12.dp))
+                            }
                             Column(Modifier.weight(1f)) {
                                 Text(warehouse.name, style = MaterialTheme.typography.titleSmall)
                                 warehouse.location?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
@@ -68,7 +138,9 @@ fun WarehousesScreen(
                                     )
                                 }
                             }
-                            Icon(Icons.Default.ChevronRight, null)
+                            if (!isMultiSelectMode) {
+                                Icon(Icons.Default.ChevronRight, null)
+                            }
                         }
                     }
                 }
