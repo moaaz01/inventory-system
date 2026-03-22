@@ -167,6 +167,7 @@ fun MainScreen(
                 DashboardScreen(onLogout = onNavigateToLogin)
             }
             composable(Screen.Products.route) {
+                val productsEntry = it
                 ProductsScreen(
                     onProductClick = onNavigateToProductDetail,
                     onAddProduct = onNavigateToAddProduct

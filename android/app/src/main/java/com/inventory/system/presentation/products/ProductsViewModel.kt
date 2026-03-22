@@ -23,7 +23,6 @@ data class ProductsUiState(
     val actionError: String? = null
 )
 
-@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class ProductsViewModel @Inject constructor(
     private val productRepository: ProductRepository,
@@ -39,7 +38,10 @@ class ProductsViewModel @Inject constructor(
 
     private val _selectedCategoryId = MutableStateFlow<Int?>(null)
 
-    val products: Flow<PagingData<Product>> = combine(_searchQuery, _selectedCategoryId) { q, cat -> q to cat }
+    private val _refreshTrigger = MutableStateFlow(0L)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val products: Flow<PagingData<Product>> = combine(_searchQuery, _selectedCategoryId, _refreshTrigger) { q, cat, _ -> q to cat }
         .debounce(300)
         .flatMapLatest { (q, cat) -> productRepository.getProducts(q.ifBlank { null }, cat) }
         .cachedIn(viewModelScope)
@@ -69,6 +71,7 @@ class ProductsViewModel @Inject constructor(
 
     fun setSearchQuery(query: String) { _searchQuery.value = query }
     fun setCategory(categoryId: Int?) { _selectedCategoryId.value = categoryId }
+    fun refreshProducts() { _refreshTrigger.value = System.currentTimeMillis() }
 
     fun loadProduct(id: Int) {
         viewModelScope.launch {

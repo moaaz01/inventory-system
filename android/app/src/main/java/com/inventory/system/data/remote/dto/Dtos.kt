@@ -75,7 +75,14 @@ data class UnitDto(
 data class WarehouseDto(
     val id: Int,
     val name: String,
-    val location: String?
+    val location: String?,
+    @SerializedName("stock_items") val stockItems: List<WarehouseStockItemDto>? = null
+)
+
+data class WarehouseStockItemDto(
+    @SerializedName("product_id") val productId: Int,
+    @SerializedName("product_name") val productName: String,
+    val quantity: Int
 )
 
 // /api/stock returns flat items with product_name, warehouse_name, is_low_stock etc.

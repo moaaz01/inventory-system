@@ -57,9 +57,16 @@ fun WarehousesScreen(
                         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Warehouse, null, tint = MaterialTheme.colorScheme.primary)
                             Spacer(Modifier.width(12.dp))
-                            Column(Modifier.weight(1f)) {
+                    Column(Modifier.weight(1f)) {
                                 Text(warehouse.name, style = MaterialTheme.typography.titleSmall)
                                 warehouse.location?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                                if (warehouse.stockInfo.isNotEmpty()) {
+                                    Text(
+                                        "${warehouse.stockInfo.size} منتج · ${warehouse.stockInfo.sumOf { it.quantity }} قطعة",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
                             }
                             Icon(Icons.Default.ChevronRight, null)
                         }
@@ -94,12 +101,34 @@ fun WarehouseDetailScreen(
             uiState.error != null -> ErrorScreen(uiState.error!!, onRetry = { viewModel.loadWarehouse(warehouseId) }, modifier = Modifier.padding(padding))
             uiState.selectedWarehouse != null -> {
                 val w = uiState.selectedWarehouse!!
+                val totalQuantity = w.stockInfo.sumOf { it.quantity }
                 LazyColumn(Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
                     item {
+                        // Info card
                         Card(Modifier.fillMaxWidth()) {
                             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Text(w.name, style = MaterialTheme.typography.titleLarge)
                                 w.location?.let { Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                            }
+                        }
+                        Spacer(Modifier.height(12.dp))
+                        // Summary card
+                        Card(
+                            Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                        ) {
+                            Row(
+                                Modifier.fillMaxWidth().padding(16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
+                                    Text("${w.stockInfo.size}", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                                    Text("منتج", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                                }
+                                Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
+                                    Text("$totalQuantity", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                                    Text("إجمالي الكميات", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                                }
                             }
                         }
                         Spacer(Modifier.height(16.dp))

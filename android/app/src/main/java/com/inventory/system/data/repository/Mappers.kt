@@ -31,7 +31,7 @@ fun WarehouseDto.toDomain() = Warehouse(
     id = id,
     name = name,
     location = location,
-    stockInfo = emptyList()
+    stockInfo = stockItems?.map { StockInfo(productId = it.productId, warehouseId = id, quantity = it.quantity, productName = it.productName) } ?: emptyList()
 )
 
 fun StockInfoDto.toDomain() = StockInfo(

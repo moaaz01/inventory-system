@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 
@@ -22,5 +22,21 @@ class WarehouseUpdate(BaseModel):
 class WarehouseResponse(WarehouseBase):
     id: int
     created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class WarehouseStockItem(BaseModel):
+    product_id: int
+    product_name: str
+    quantity: int
+
+    model_config = {"from_attributes": True}
+
+
+class WarehouseDetailResponse(WarehouseBase):
+    id: int
+    created_at: datetime
+    stock_items: List[WarehouseStockItem] = []
 
     model_config = {"from_attributes": True}
