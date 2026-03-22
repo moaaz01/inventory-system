@@ -2,8 +2,11 @@ package com.inventory.system.data.repository
 
 import com.inventory.system.data.local.entity.*
 import com.inventory.system.data.remote.dto.*
+import com.inventory.system.domain.model.NextSku
 import com.inventory.system.domain.model.*
 import com.inventory.system.domain.model.Unit as InventoryUnit
+
+fun NextSkuDto.toDomain() = NextSku(sku = sku, prefix = prefix)
 
 // DTO -> Domain
 fun ProductDto.toDomain() = Product(

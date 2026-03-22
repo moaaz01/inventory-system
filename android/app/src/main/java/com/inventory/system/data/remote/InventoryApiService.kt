@@ -1,6 +1,7 @@
 package com.inventory.system.data.remote
 
 import com.inventory.system.data.remote.dto.*
+import com.inventory.system.data.remote.dto.NextSkuDto
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -119,6 +120,9 @@ interface InventoryApiService {
     // Dashboard
     @GET("api/dashboard/stats")
     suspend fun getDashboardStats(): DashboardStatsDto
+
+    @GET("api/products/next-sku/{categoryId}")
+    suspend fun getNextSku(@Path("categoryId") categoryId: Int): NextSkuDto
 
     // All products (no paging) for dropdowns - uses /api/products/all
     @GET("api/products/all")

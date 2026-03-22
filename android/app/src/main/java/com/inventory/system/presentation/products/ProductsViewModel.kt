@@ -20,7 +20,8 @@ data class ProductsUiState(
     val units: List<InventoryUnit> = emptyList(),
     val selectedProduct: Product? = null,
     val actionSuccess: Boolean = false,
-    val actionError: String? = null
+    val actionError: String? = null,
+    val generatedSku: String? = null
 )
 
 @HiltViewModel
@@ -120,6 +121,17 @@ class ProductsViewModel @Inject constructor(
     }
 
     fun clearActionState() {
-        _uiState.update { it.copy(actionSuccess = false, actionError = null) }
+        _uiState.update { it.copy(actionSuccess = false, actionError = null, generatedSku = null) }
+    }
+
+    fun generateNextSku(categoryId: Int?) {
+        val catId = categoryId ?: 0
+        viewModelScope.launch {
+            when (val r = productRepository.getNextSku(catId)) {
+                is Result.Success -> _uiState.update { it.copy(generatedSku = r.data.sku) }
+                is Result.Error -> _uiState.update { it.copy(actionError = r.message) }
+                is Result.Loading -> {}
+            }
+        }
     }
 }

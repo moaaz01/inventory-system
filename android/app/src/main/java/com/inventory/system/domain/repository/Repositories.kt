@@ -2,6 +2,7 @@ package com.inventory.system.domain.repository
 
 import androidx.paging.PagingData
 import com.inventory.system.domain.model.*
+import com.inventory.system.domain.model.NextSku
 import com.inventory.system.domain.model.Unit as InventoryUnit
 import kotlinx.coroutines.flow.Flow
 
@@ -23,6 +24,7 @@ interface ProductRepository {
     fun getCachedProducts(): Flow<List<Product>>
     suspend fun getProductBySku(sku: String): Product?
     suspend fun searchProducts(query: String): Result<List<Product>>
+    suspend fun getNextSku(categoryId: Int): Result<NextSku>
 }
 
 interface CategoryRepository {

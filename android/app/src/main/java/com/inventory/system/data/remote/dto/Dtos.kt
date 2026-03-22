@@ -48,6 +48,11 @@ data class ProductStockDto(
     val quantity: Int
 )
 
+data class NextSkuDto(
+    val sku: String,
+    val prefix: String
+)
+
 data class ProductCreateRequest(
     val sku: String,
     val name: String,

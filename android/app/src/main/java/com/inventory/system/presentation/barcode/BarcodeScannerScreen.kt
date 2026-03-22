@@ -29,7 +29,9 @@ import com.google.zxing.integration.android.IntentIntegrator
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BarcodeScannerScreen(
-    onBarcodeScanned: (String) -> Unit,
+    onBarcodeScanned: (String) -> Unit = {},
+    onProductFound: (Int) -> Unit = {},
+    onProductNotFound: (String) -> Unit = {},
     onNavigateBack: () -> Unit,
     viewModel: BarcodeViewModel = hiltViewModel()
 ) {
@@ -90,6 +92,19 @@ fun BarcodeScannerScreen(
 
     LaunchedEffect(Unit) {
         showScannerHint = true
+    }
+
+    // Auto-navigate when product found or not found
+    LaunchedEffect(uiState.foundProduct) {
+        uiState.foundProduct?.let { product ->
+            onProductFound(product.id)
+        }
+    }
+
+    LaunchedEffect(uiState.notFound) {
+        if (uiState.notFound && manualInput.length >= 3) {
+            onProductNotFound(manualInput)
+        }
     }
 
     Scaffold(

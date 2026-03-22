@@ -40,6 +40,11 @@ fun AddEditProductScreen(
     var currencyExpanded by remember { mutableStateOf(false) }
     val currencies = listOf("USD", "SYP", "TRY")
 
+    // Sync generated SKU from ViewModel
+    LaunchedEffect(uiState.generatedSku) {
+        uiState.generatedSku?.let { sku = it }
+    }
+
     LaunchedEffect(productId) {
         if (productId != null) {
             viewModel.loadProduct(productId)
@@ -84,8 +89,28 @@ fun AddEditProductScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            OutlinedTextField(value = sku, onValueChange = { sku = it },
-                label = { Text("رمز المنتج (SKU)") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+            // SKU field: readOnly in edit mode, auto-generate button in add mode
+            OutlinedTextField(
+                value = sku,
+                onValueChange = { if (!isEdit && uiState.generatedSku == null) sku = it },
+                label = { Text("رمز المنتج (SKU)") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                readOnly = isEdit || uiState.generatedSku != null,
+                trailingIcon = {
+                    if (!isEdit) {
+                        if (uiState.generatedSku != null) {
+                            IconButton(onClick = { viewModel.clearActionState(); sku = "" }) {
+                                Icon(Icons.Default.Clear, "مسح SKU")
+                            }
+                        } else {
+                            IconButton(onClick = { viewModel.generateNextSku(selectedCategoryId) }) {
+                                Icon(Icons.Default.AutoAwesome, "توليد تلقائي")
+                            }
+                        }
+                    }
+                }
+            )
 
             OutlinedTextField(value = name, onValueChange = { name = it },
                 label = { Text("اسم المنتج") }, modifier = Modifier.fillMaxWidth(), singleLine = true)

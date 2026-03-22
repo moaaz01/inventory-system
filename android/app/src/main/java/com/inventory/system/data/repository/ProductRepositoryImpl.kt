@@ -4,6 +4,7 @@ import androidx.paging.*
 import com.inventory.system.data.local.dao.ProductDao
 import com.inventory.system.data.remote.InventoryApiService
 import com.inventory.system.domain.model.Product
+import com.inventory.system.domain.model.NextSku
 import com.inventory.system.domain.model.Result
 import com.inventory.system.domain.repository.ProductRepository
 import kotlinx.coroutines.flow.Flow
@@ -77,6 +78,10 @@ class ProductRepositoryImpl @Inject constructor(
         val products = response.items.map { it.toDomain() }
         productDao.upsertAll(response.items.map { it.toEntity() })
         products
+    }
+
+    override suspend fun getNextSku(categoryId: Int): Result<NextSku> = safeApiCall {
+        api.getNextSku(categoryId).toDomain()
     }
 
     override fun getCachedProducts(): Flow<List<Product>> =

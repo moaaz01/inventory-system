@@ -139,6 +139,14 @@ fun InventoryNavHost() {
                     navController.popBackStack()
                     navController.navigate(Screen.AddEditProductWithSku.createRouteWithSku(sku))
                 },
+                onProductFound = { productId ->
+                    navController.popBackStack()
+                    navController.navigate(Screen.ProductDetail.createRoute(productId))
+                },
+                onProductNotFound = { sku ->
+                    navController.popBackStack()
+                    navController.navigate(Screen.AddEditProductWithSku.createRouteWithSku(sku))
+                },
                 onNavigateBack = { navController.popBackStack() }
             )
         }
