@@ -133,25 +133,38 @@ fun ProductsScreen(
 
 @Composable
 fun ProductListItem(product: Product, onClick: () -> Unit) {
+    val totalStock = product.stockInfo.sumOf { it.quantity }
+    val isLow = totalStock <= product.minStockLevel
     Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).clickable(onClick = onClick)
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isLow) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.25f)
+                             else MaterialTheme.colorScheme.surface
+        )
     ) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(product.name, style = MaterialTheme.typography.titleSmall)
-                Text(product.sku, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("SKU: ${product.sku}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 product.categoryName?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+                Text(
+                    "الحد الأدنى: ${product.minStockLevel}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
             Column(horizontalAlignment = Alignment.End) {
-                val totalStock = product.stockInfo.sumOf { it.quantity }
-                val isLow = totalStock <= product.minStockLevel
                 Text(
                     text = "$totalStock",
                     style = MaterialTheme.typography.titleMedium,
                     color = if (isLow) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                 )
                 if (isLow) {
-                    Icon(Icons.Default.Warning, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(16.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Warning, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(14.dp))
+                        Spacer(Modifier.width(2.dp))
+                        Text("منخفض", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
+                    }
                 }
             }
         }

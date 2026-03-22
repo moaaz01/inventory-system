@@ -21,6 +21,7 @@ import com.inventory.system.presentation.components.LoadingScreen
 @Composable
 fun DashboardScreen(
     onLogout: () -> Unit,
+    onNavigateToSettings: () -> Unit,
     viewModel: DashboardViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
@@ -31,6 +32,9 @@ fun DashboardScreen(
             TopAppBar(
                 title = { Text("لوحة التحكم") },
                 actions = {
+                    IconButton(onClick = onNavigateToSettings) {
+                        Icon(Icons.Default.Settings, contentDescription = "الإعدادات")
+                    }
                     IconButton(onClick = {
                         authViewModel.logout()
                         onLogout()

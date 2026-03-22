@@ -57,7 +57,7 @@ fun WarehousesScreen(
                         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Warehouse, null, tint = MaterialTheme.colorScheme.primary)
                             Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f)) {
+                            Column(Modifier.weight(1f)) {
                                 Text(warehouse.name, style = MaterialTheme.typography.titleSmall)
                                 warehouse.location?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                                 if (warehouse.stockInfo.isNotEmpty()) {
@@ -102,6 +102,7 @@ fun WarehouseDetailScreen(
             uiState.selectedWarehouse != null -> {
                 val w = uiState.selectedWarehouse!!
                 val totalQuantity = w.stockInfo.sumOf { it.quantity }
+                val lowStockThreshold = 10
                 LazyColumn(Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
                     item {
                         // Info card
@@ -113,21 +114,28 @@ fun WarehouseDetailScreen(
                         }
                         Spacer(Modifier.height(12.dp))
                         // Summary card
+                        val lowCount = w.stockInfo.count { it.quantity < lowStockThreshold }
                         Card(
                             Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
                         ) {
                             Row(
                                 Modifier.fillMaxWidth().padding(16.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween
+                                horizontalArrangement = Arrangement.SpaceEvenly
                             ) {
-                                Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text("${w.stockInfo.size}", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
                                     Text("منتج", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
                                 }
-                                Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text("$totalQuantity", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
                                     Text("إجمالي الكميات", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                                }
+                                if (lowCount > 0) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text("$lowCount", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.error)
+                                        Text("مخزون منخفض", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                                    }
                                 }
                             }
                         }
@@ -139,10 +147,39 @@ fun WarehouseDetailScreen(
                         item { Text("لا توجد منتجات في هذا المستودع", color = MaterialTheme.colorScheme.onSurfaceVariant) }
                     } else {
                         items(w.stockInfo) { stock ->
-                            Card(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-                                Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text(stock.productName ?: "منتج #${stock.productId}")
-                                    Text("${stock.quantity}", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+                            val isLow = stock.quantity < lowStockThreshold
+                            Card(
+                                Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (isLow) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                                                     else MaterialTheme.colorScheme.surface
+                                )
+                            ) {
+                                Row(
+                                    Modifier.fillMaxWidth().padding(16.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        if (isLow) {
+                                            Icon(
+                                                Icons.Default.Warning,
+                                                null,
+                                                tint = MaterialTheme.colorScheme.error,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                            Spacer(Modifier.width(8.dp))
+                                        }
+                                        Text(
+                                            stock.productName ?: "منتج #${stock.productId}",
+                                            style = MaterialTheme.typography.bodyLarge
+                                        )
+                                    }
+                                    Text(
+                                        "${stock.quantity}",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = if (isLow) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                                    )
                                 }
                             }
                         }

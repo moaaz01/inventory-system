@@ -20,6 +20,7 @@ import com.inventory.system.presentation.categories.CategoriesScreen
 import com.inventory.system.presentation.warehouses.AddEditWarehouseScreen
 import com.inventory.system.presentation.warehouses.WarehouseDetailScreen
 import com.inventory.system.presentation.warehouses.WarehousesScreen
+import com.inventory.system.presentation.settings.SettingsScreen
 
 @Composable
 fun InventoryNavHost() {
@@ -65,6 +66,9 @@ fun InventoryNavHost() {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Main.route) { inclusive = true }
                     }
+                },
+                onNavigateToSettings = {
+                    navController.navigate(Screen.Settings.route)
                 },
                 onNavigateToProductDetail = { id ->
                     navController.navigate(Screen.ProductDetail.createRoute(id))
@@ -122,12 +126,24 @@ fun InventoryNavHost() {
         composable(route = Screen.Categories.route) {
             CategoriesScreen(onNavigateBack = { navController.popBackStack() })
         }
+
+        composable(route = Screen.Settings.route) {
+            SettingsScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onLogout = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Main.route) { inclusive = true }
+                    }
+                }
+            )
+        }
     }
 }
 
 @Composable
 fun MainScreen(
     onNavigateToLogin: () -> Unit,
+    onNavigateToSettings: () -> Unit = {},
     onNavigateToProductDetail: (Int) -> Unit,
     onNavigateToAddProduct: () -> Unit,
     onNavigateToEditProduct: (Int) -> Unit,
@@ -164,7 +180,10 @@ fun MainScreen(
             modifier = Modifier.padding(padding)
         ) {
             composable(Screen.Dashboard.route) {
-                DashboardScreen(onLogout = onNavigateToLogin)
+                DashboardScreen(
+                    onLogout = onNavigateToLogin,
+                    onNavigateToSettings = onNavigateToSettings
+                )
             }
             composable(Screen.Products.route) {
                 val productsEntry = it
