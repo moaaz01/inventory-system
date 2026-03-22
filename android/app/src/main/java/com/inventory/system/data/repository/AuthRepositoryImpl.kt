@@ -53,24 +53,41 @@ suspend fun <T> safeApiCall(call: suspend () -> T): Result<T> {
 
 private fun translateApiError(raw: String?, httpCode: Int): String {
     if (raw == null) return "حدث خطأ غير متوقع"
+    val lower = raw.lowercase()
     return when {
-        raw.contains("Admin access required", ignoreCase = true) ->
-            "ليس لديك صلاحية_manager_access لهذا الإجراء.\nيرجى التواصل مع مدير النظام."
-        raw.contains("Not authenticated", ignoreCase = true) ||
-        raw.contains("Invalid or expired token", ignoreCase = true) ->
+        // Admin / Auth errors
+        lower.contains("admin access required") ->
+            "ليس لديك صلاحية لهذا الإجراء. يرجى التواصل مع مدير النظام."
+        lower.contains("not authenticated") || lower.contains("invalid or expired token") ->
             "انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى."
-        raw.contains("Not Found", ignoreCase = true) && httpCode == 404 ->
-            "المورد المطلوب غير موجود"
-        raw.contains("Bad Request", ignoreCase = true) || httpCode == 400 ->
-            "بيانات غير صحيحة. يرجى التحقق من المدخلات."
-        raw.contains("Rate limit", ignoreCase = true) ->
+        lower.contains("invalid credentials") ->
+            "اسم المستخدم أو كلمة المرور غير صحيحة"
+        lower.contains("rate limit") || lower.contains("too many requests") ->
             "محاولات كثيرة. يرجى الانتظار دقيقة قبل المحاولة."
-        raw.contains("duplicate", ignoreCase = true) ||
-        raw.contains("already exists", ignoreCase = true) ->
-            "هذا العنصر موجود بالفعل"
-        raw.contains("foreign key", ignoreCase = true) ||
-        raw.contains("constraint", ignoreCase = true) ->
-            "لا يمكن تنفيذ هذا الإجراء بسبب ارتباطه ببيانات أخرى"
+
+        // User registration errors
+        lower.contains("username already taken") || lower.contains("username_already_taken") ->
+            "اسم المستخدم مستخدم بالفعل. اختر اسم مستخدم آخر."
+        lower.contains("email already taken") || lower.contains("email_already_taken") ->
+            "البريد الإلكتروني مستخدم بالفعل. استخدم بريد إلكتروني آخر."
+        lower.contains("password must be at least") || lower.contains("password too short") ->
+            "كلمة المرور قصيرة جداً. يجب أن تكون 8 أحرف على الأقل."
+        lower.contains("not a valid email") || lower.contains("invalid email") ->
+            "البريد الإلكتروني غير صحيح. أدخل بريد إلكتروني صحيح."
+        lower.contains("password is incorrect") || lower.contains("current password is incorrect") ->
+            "كلمة المرور الحالية غير صحيحة."
+
+        // Product/Entity errors
+        lower.contains("already exists") || lower.contains("already_taken") ->
+            "هذا العنصر موجود بالفعل في النظام."
+        lower.contains("foreign key") || lower.contains("constraint") ->
+            "لا يمكن تنفيذ هذا الإجراء. هذا العنصر مرتبط ببيانات أخرى."
+        lower.contains("not found") && httpCode == 404 ->
+            "المورد المطلوب غير موجود."
+        lower.contains("bad request") || httpCode == 400 ->
+            "بيانات غير صحيحة. يرجى التحقق من المدخلات."
+
+        // Generic
         else -> raw
     }
 }
