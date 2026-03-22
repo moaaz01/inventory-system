@@ -109,10 +109,16 @@ dependencies {
     implementation(libs.coil.compose)
 
     // CameraX + ML Kit barcode (requires internet to download - build on machine with internet)
-    // implementation("com.google.mlkit:barcode-scanning:17.2.0")
-    // implementation("androidx.camera:camera-camera2:1.3.1")
-    // implementation("androidx.camera:camera-lifecycle:1.3.1")
-    // implementation("androidx.camera:camera-view:1.3.1")
+    // CameraX + ZXing barcode (local libs)
+    implementation(files("libs/camera-core-1.3.0.aar"))
+    implementation(files("libs/camera-camera2-1.3.0.aar"))
+    implementation(files("libs/camera-lifecycle-1.3.0.aar"))
+    implementation(files("libs/camera-view-1.3.0.aar"))
+    implementation(files("libs/zxing-android-embedded-4.3.0.aar"))
+    implementation(files("libs/zxing-core-3.5.2.jar"))
+    // Guava for ListenableFuture (required by CameraX)
+    implementation("com.google.guava:guava:31.1-android")
+    implementation("androidx.lifecycle:lifecycle-runtime:2.5.1")
 
     // Security
     implementation(libs.security.crypto)
