@@ -11,11 +11,11 @@ fun ProductDto.toDomain() = Product(
     sku = sku,
     name = name,
     categoryId = categoryId,
-    categoryName = category?.name,
+    categoryName = categoryName,
     unitId = unitId,
-    unitName = unit?.name,
+    unitName = unitName,
     minStockLevel = minStockLevel,
-    stockInfo = stockInfo?.map { it.toDomain() } ?: emptyList()
+    stockInfo = stock?.map { StockInfo(productId = id, warehouseId = it.warehouseId, quantity = it.quantity, warehouseName = it.warehouseName) } ?: emptyList()
 )
 
 fun CategoryDto.toDomain(): Category = Category(
@@ -31,30 +31,30 @@ fun WarehouseDto.toDomain() = Warehouse(
     id = id,
     name = name,
     location = location,
-    stockInfo = stockInfo?.map { it.toDomain() } ?: emptyList()
+    stockInfo = emptyList()
 )
 
 fun StockInfoDto.toDomain() = StockInfo(
     productId = productId,
     warehouseId = warehouseId,
     quantity = quantity,
-    productName = product?.name,
-    warehouseName = warehouse?.name
+    productName = productName,
+    warehouseName = warehouseName
 )
 
 fun MovementDto.toDomain() = Movement(
     id = id,
-    type = type,
+    type = movementType,
     productId = productId,
     warehouseId = warehouseId,
-    fromWarehouseId = fromWarehouseId,
+    fromWarehouseId = null,
     toWarehouseId = toWarehouseId,
     quantity = quantity,
     referenceNumber = referenceNumber,
     notes = notes,
     createdAt = createdAt,
-    productName = product?.name,
-    warehouseName = warehouse?.name
+    productName = productName,
+    warehouseName = warehouseName
 )
 
 fun DashboardStatsDto.toDomain() = DashboardStats(
@@ -69,9 +69,21 @@ fun InventoryReportItemDto.toDomain() = InventoryReportItem(
     productId = productId,
     productName = productName,
     sku = sku,
-    totalQuantity = totalQuantity,
+    totalQuantity = quantity,
     minStockLevel = minStockLevel,
     isLowStock = isLowStock
+)
+
+fun LowStockItemDto.toDomain() = Product(
+    id = productId,
+    sku = sku,
+    name = productName,
+    categoryId = null,
+    categoryName = null,
+    unitId = null,
+    unitName = null,
+    minStockLevel = minStockLevel,
+    stockInfo = listOf(StockInfo(productId = productId, warehouseId = warehouseId, quantity = quantity, warehouseName = warehouseName))
 )
 
 fun UserDto.toDomain() = User(id = id, username = username, email = email, role = role)
@@ -80,7 +92,7 @@ fun UserDto.toDomain() = User(id = id, username = username, email = email, role 
 fun ProductDto.toEntity() = ProductEntity(
     id = id, sku = sku, name = name, categoryId = categoryId,
     unitId = unitId, minStockLevel = minStockLevel,
-    categoryName = category?.name, unitName = unit?.name
+    categoryName = categoryName, unitName = unitName
 )
 
 fun CategoryDto.toEntity() = CategoryEntity(id = id, name = name, parentId = parentId)

@@ -106,7 +106,7 @@ interface InventoryApiService {
     suspend fun getInventoryReport(): List<InventoryReportItemDto>
 
     @GET("api/reports/low-stock")
-    suspend fun getLowStockReport(): List<ProductDto>
+    suspend fun getLowStockReport(): List<LowStockItemDto>
 
     @GET("api/reports/movements")
     suspend fun getMovementsReport(
