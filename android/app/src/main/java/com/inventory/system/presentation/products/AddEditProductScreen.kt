@@ -1,8 +1,10 @@
 package com.inventory.system.presentation.products
 
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Environment
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -12,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.core.content.FileProvider
 import com.inventory.system.domain.model.Unit as InventoryUnit
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
@@ -102,7 +105,7 @@ fun AddEditProductScreen(
         }
     }
 
-    // Barcode dialog
+    // Barcode dialog with save + share
     if (showBarcodeDialog) {
         if (barcodeBitmap == null && sku.isNotBlank()) {
             barcodeBitmap = generateBarcodeImage(sku)
@@ -121,18 +124,53 @@ fun AddEditProductScreen(
                     }
                 },
                 confirmButton = {
-                    TextButton(onClick = {
-                        // Save barcode image
-                        try {
-                            val dir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-                            val file = File(dir, "barcode_${sku}.png")
-                            FileOutputStream(file).use { out ->
-                                bmp.compress(Bitmap.CompressFormat.PNG, 100, out)
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        // Share button
+                        TextButton(onClick = {
+                            try {
+                                val cacheFile = File(context.cacheDir, "barcode_${sku}.png")
+                                FileOutputStream(cacheFile).use { out ->
+                                    bmp.compress(Bitmap.CompressFormat.PNG, 100, out)
+                                }
+                                val uri = FileProvider.getUriForFile(
+                                    context,
+                                    "${context.packageName}.provider",
+                                    cacheFile
+                                )
+                                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                    type = "image/png"
+                                    putExtra(Intent.EXTRA_STREAM, uri)
+                                    putExtra(Intent.EXTRA_SUBJECT, "باركود المنتج $sku")
+                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
+                                context.startActivity(Intent.createChooser(shareIntent, "مشاركة الباركود"))
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "فشل المشاركة: ${e.message}", Toast.LENGTH_LONG).show()
                             }
-                        } catch (_: Exception) {}
-                        showBarcodeDialog = false
-                        barcodeBitmap = null
-                    }) { Text("حفظ") }
+                        }) {
+                            Icon(Icons.Default.Share, null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("مشاركة")
+                        }
+                        // Save button
+                        TextButton(onClick = {
+                            try {
+                                val dir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+                                if (dir != null && !dir.exists()) dir.mkdirs()
+                                val file = File(dir, "barcode_${sku}.png")
+                                FileOutputStream(file).use { out ->
+                                    bmp.compress(Bitmap.CompressFormat.PNG, 100, out)
+                                }
+                                Toast.makeText(context, "تم حفظ الباركود في: ${file.absolutePath}", Toast.LENGTH_LONG).show()
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "فشل الحفظ: ${e.message}", Toast.LENGTH_LONG).show()
+                            }
+                        }) {
+                            Icon(Icons.Default.Save, null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("حفظ")
+                        }
+                    }
                 },
                 dismissButton = {
                     TextButton(onClick = { showBarcodeDialog = false; barcodeBitmap = null }) { Text("إغلاق") }
