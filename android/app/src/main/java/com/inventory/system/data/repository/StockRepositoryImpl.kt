@@ -10,6 +10,15 @@ class StockRepositoryImpl @Inject constructor(
     private val api: InventoryApiService
 ) : StockRepository {
 
+    private suspend fun <T> safeApiCall(apiCall: suspend () -> T): Result<T> {
+        return try {
+            Result.Success(apiCall())
+        } catch (e: Exception) {
+            Result.Error(e.message ?: "Unknown error")
+        }
+    }
+
+
     override suspend fun getStock(warehouseId: Int?, productId: Int?, lowStock: Boolean?): Result<List<StockInfo>> = safeApiCall {
         api.getStock(warehouseId, productId, lowStock).map { it.toDomain() }
     }

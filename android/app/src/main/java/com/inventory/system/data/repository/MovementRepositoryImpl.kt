@@ -12,6 +12,15 @@ class MovementRepositoryImpl @Inject constructor(
     private val api: InventoryApiService
 ) : MovementRepository {
 
+    private suspend fun <T> safeApiCall(apiCall: suspend () -> T): Result<T> {
+        return try {
+            Result.Success(apiCall())
+        } catch (e: Exception) {
+            Result.Error(e.message ?: "Unknown error")
+        }
+    }
+
+
     override fun getMovements(type: String?, productId: Int?, warehouseId: Int?): Flow<PagingData<Movement>> {
         return Pager(
             config = PagingConfig(pageSize = 20, enablePlaceholders = false)

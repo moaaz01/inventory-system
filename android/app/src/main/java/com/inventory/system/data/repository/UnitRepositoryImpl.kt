@@ -14,6 +14,15 @@ class UnitRepositoryImpl @Inject constructor(
     private val unitDao: UnitDao
 ) : UnitRepository {
 
+    private suspend fun <T> safeApiCall(apiCall: suspend () -> T): Result<T> {
+        return try {
+            Result.Success(apiCall())
+        } catch (e: Exception) {
+            Result.Error(e.message ?: "Unknown error")
+        }
+    }
+
+
     override suspend fun getUnits(): Result<List<InventoryUnit>> = safeApiCall {
         val dtos = api.getUnits()
         unitDao.upsertAll(dtos.map { it.toEntity() })

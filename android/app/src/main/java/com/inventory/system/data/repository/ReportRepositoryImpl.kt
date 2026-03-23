@@ -12,6 +12,15 @@ class ReportRepositoryImpl @Inject constructor(
     private val api: InventoryApiService
 ) : ReportRepository {
 
+    private suspend fun <T> safeApiCall(apiCall: suspend () -> T): Result<T> {
+        return try {
+            Result.Success(apiCall())
+        } catch (e: Exception) {
+            Result.Error(e.message ?: "Unknown error")
+        }
+    }
+
+
     override suspend fun getInventoryReport(): Result<List<InventoryReportItem>> {
         DebugLogger.logApiCall(TAG, "/api/reports/inventory")
         return safeApiCall {

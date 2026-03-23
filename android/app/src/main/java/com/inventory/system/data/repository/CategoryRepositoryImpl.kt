@@ -14,6 +14,14 @@ class CategoryRepositoryImpl @Inject constructor(
     private val categoryDao: CategoryDao
 ) : CategoryRepository {
 
+    private suspend fun <T> safeApiCall(apiCall: suspend () -> T): Result<T> {
+        return try {
+            Result.Success(apiCall())
+        } catch (e: Exception) {
+            Result.Error(e.message ?: "Unknown error")
+        }
+    }
+
     override suspend fun getCategories(): Result<List<Category>> = safeApiCall {
         val dtos = api.getCategories()
         categoryDao.upsertAll(dtos.map { it.toEntity() })

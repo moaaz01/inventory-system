@@ -16,6 +16,15 @@ class ProductRepositoryImpl @Inject constructor(
     private val productDao: ProductDao
 ) : ProductRepository {
 
+    private suspend fun <T> safeApiCall(apiCall: suspend () -> T): Result<T> {
+        return try {
+            Result.Success(apiCall())
+        } catch (e: Exception) {
+            Result.Error(e.message ?: "Unknown error")
+        }
+    }
+
+
     override fun getProducts(search: String?, categoryId: Int?): Flow<PagingData<Product>> {
         return Pager(
             config = PagingConfig(pageSize = 20, enablePlaceholders = false)

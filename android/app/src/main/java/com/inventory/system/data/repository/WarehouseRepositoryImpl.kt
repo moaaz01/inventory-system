@@ -17,6 +17,15 @@ class WarehouseRepositoryImpl @Inject constructor(
     private val warehouseDao: WarehouseDao
 ) : WarehouseRepository {
 
+    private suspend fun <T> safeApiCall(apiCall: suspend () -> T): Result<T> {
+        return try {
+            Result.Success(apiCall())
+        } catch (e: Exception) {
+            Result.Error(e.message ?: "Unknown error")
+        }
+    }
+
+
     override suspend fun getWarehouses(): Result<List<Warehouse>> {
         DebugLogger.logApiCall(TAG, "/api/warehouses")
         return safeApiCall {

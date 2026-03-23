@@ -14,6 +14,15 @@ class AuthRepositoryImpl @Inject constructor(
     private val tokenDataStore: TokenDataStore
 ) : AuthRepository {
 
+    private suspend fun <T> safeApiCall(apiCall: suspend () -> T): Result<T> {
+        return try {
+            Result.Success(apiCall())
+        } catch (e: Exception) {
+            Result.Error(e.message ?: "Unknown error")
+        }
+    }
+
+
     override suspend fun login(username: String, password: String): Result<User> = safeApiCall {
         val response = api.login(com.inventory.system.data.remote.dto.LoginRequest(username, password))
         tokenDataStore.saveToken(response.accessToken, username)

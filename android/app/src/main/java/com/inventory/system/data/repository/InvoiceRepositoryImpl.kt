@@ -15,6 +15,15 @@ class InvoiceRepositoryImpl @Inject constructor(
     private val api: InventoryApiService
 ) : InvoiceRepository {
 
+    private suspend fun <T> safeApiCall(apiCall: suspend () -> T): Result<T> {
+        return try {
+            Result.Success(apiCall())
+        } catch (e: Exception) {
+            Result.Error(e.message ?: "Unknown error")
+        }
+    }
+
+
     override suspend fun createInvoice(customerName: String?, discount: Double, items: List<CartItem>): Result<Invoice> = safeApiCall {
         val dto = api.createInvoice(
             CreateInvoiceDto(

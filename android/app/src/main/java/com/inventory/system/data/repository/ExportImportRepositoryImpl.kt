@@ -13,6 +13,15 @@ class ExportImportRepositoryImpl @Inject constructor(
     private val api: InventoryApiService
 ) : ExportImportRepository {
 
+    private suspend fun <T> safeApiCall(apiCall: suspend () -> T): Result<T> {
+        return try {
+            Result.Success(apiCall())
+        } catch (e: Exception) {
+            Result.Error(e.message ?: "Unknown error")
+        }
+    }
+
+
     override suspend fun exportProducts(): Result<ByteArray> = safeApiCall {
         api.exportProducts().bytes()
     }

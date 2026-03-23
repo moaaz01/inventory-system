@@ -12,6 +12,15 @@ class UserRepositoryImpl @Inject constructor(
     private val api: InventoryApiService
 ) : UserRepository {
 
+    private suspend fun <T> safeApiCall(apiCall: suspend () -> T): Result<T> {
+        return try {
+            Result.Success(apiCall())
+        } catch (e: Exception) {
+            Result.Error(e.message ?: "Unknown error")
+        }
+    }
+
+
     override suspend fun getUsers(): Result<List<User>> = safeApiCall {
         api.getUsers().map { it.toDomain() }
     }
