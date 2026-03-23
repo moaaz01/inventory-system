@@ -244,11 +244,6 @@ fun MainScreen(
                     onBarcodeScanner = onNavigateToBarcodeScanner
                 )
             }
-            composable(Screen.Cashier.route) {
-                // The full Cashier screen is accessible from top-level NavHost
-                // Here we just redirect to top-level Cashier
-                LaunchedEffect(Unit) { onNavigateToCashier() }
-            }
             composable(Screen.Warehouses.route) {
                 WarehousesScreen(
                     onWarehouseClick = onNavigateToWarehouseDetail,

@@ -53,7 +53,6 @@ enum class BottomNavItem(
 ) {
     DASHBOARD(Screen.Dashboard, "لوحة التحكم", Icons.Default.Dashboard),
     PRODUCTS(Screen.Products, "المنتجات", Icons.Default.Inventory),
-    CASHIER(Screen.Cashier, "الكاشير", Icons.Default.ShoppingCart),
     WAREHOUSES(Screen.Warehouses, "المستودعات", Icons.Default.Warehouse),
     STOCK(Screen.StockOperations, "العمليات", Icons.Default.SwapHoriz),
     REPORTS(Screen.Reports, "التقارير", Icons.Default.Assessment)

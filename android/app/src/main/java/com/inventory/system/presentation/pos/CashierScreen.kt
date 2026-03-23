@@ -252,11 +252,15 @@ fun CashierScreen(
                         Button(
                             onClick = { viewModel.createInvoice() },
                             modifier = Modifier.weight(1f),
-                            enabled = uiState.cartItems.isNotEmpty() && !uiState.isLoading
+                            enabled = uiState.cartItems.isNotEmpty() && !uiState.isLoading,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = androidx.compose.ui.graphics.Color(0xFF1B5E20),
+                                contentColor = androidx.compose.ui.graphics.Color.White
+                            )
                         ) {
                             Icon(Icons.Default.Receipt, null, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(4.dp))
-                            Text("فاتورة")
+                            Text("إنشاء الفاتورة")
                         }
                     }
                 }

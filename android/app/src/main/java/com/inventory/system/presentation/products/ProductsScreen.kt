@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,6 +36,7 @@ fun ProductsScreen(
     var showFilterMenu by remember { mutableStateOf(false) }
     var isMultiSelectMode by remember { mutableStateOf(false) }
     var selectedIds by remember { mutableStateOf(setOf<Int>()) }
+    var isRefreshing by remember { mutableStateOf(false) }
 
     // Refresh products when screen resumes (e.g. after adding a product)
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -147,54 +149,65 @@ fun ProductsScreen(
                 )
             }
 
-            when (products.loadState.refresh) {
-                is LoadState.Loading -> LoadingScreen()
-                is LoadState.Error -> {
-                    val error = (products.loadState.refresh as LoadState.Error).error
-                    ErrorScreen(message = error.message ?: "خطأ في التحميل", onRetry = { products.retry() })
-                }
-                else -> {
-                    if (products.itemCount == 0 && products.loadState.refresh !is LoadState.Loading) {
-                        EmptyScreen(
-                            message = "لا توجد منتجات",
-                            actionLabel = "إضافة منتج",
-                            onAction = onAddProduct
-                        )
-                    } else {
-                        LazyColumn(modifier = Modifier.fillMaxSize()) {
-                            items(products.itemCount) { index ->
-                                products[index]?.let { product ->
-                                    ProductListItem(
-                                        product = product,
-                                        isMultiSelectMode = isMultiSelectMode,
-                                        isSelected = selectedIds.contains(product.id),
-                                        onCheckedChange = { checked ->
-                                            selectedIds = if (checked) selectedIds + product.id else selectedIds - product.id
-                                        },
-                                        onClick = {
-                                            if (isMultiSelectMode) {
-                                                val checked = !selectedIds.contains(product.id)
+            PullToRefreshBox(
+                isRefreshing = isRefreshing || products.loadState.refresh is LoadState.Loading,
+                onRefresh = {
+                    isRefreshing = true
+                    viewModel.refreshProducts()
+                    products.refresh()
+                    isRefreshing = false
+                },
+                modifier = Modifier.fillMaxSize()
+            ) {
+                when (products.loadState.refresh) {
+                    is LoadState.Loading -> LoadingScreen()
+                    is LoadState.Error -> {
+                        val error = (products.loadState.refresh as LoadState.Error).error
+                        ErrorScreen(message = error.message ?: "خطأ في التحميل", onRetry = { products.retry() })
+                    }
+                    else -> {
+                        if (products.itemCount == 0 && products.loadState.refresh !is LoadState.Loading) {
+                            EmptyScreen(
+                                message = "لا توجد منتجات",
+                                actionLabel = "إضافة منتج",
+                                onAction = onAddProduct
+                            )
+                        } else {
+                            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                                items(products.itemCount) { index ->
+                                    products[index]?.let { product ->
+                                        ProductListItem(
+                                            product = product,
+                                            isMultiSelectMode = isMultiSelectMode,
+                                            isSelected = selectedIds.contains(product.id),
+                                            onCheckedChange = { checked ->
                                                 selectedIds = if (checked) selectedIds + product.id else selectedIds - product.id
-                                            } else {
-                                                onProductClick(product.id)
+                                            },
+                                            onClick = {
+                                                if (isMultiSelectMode) {
+                                                    val checked = !selectedIds.contains(product.id)
+                                                    selectedIds = if (checked) selectedIds + product.id else selectedIds - product.id
+                                                } else {
+                                                    onProductClick(product.id)
+                                                }
                                             }
-                                        }
-                                    )
-                                }
-                            }
-                            when (products.loadState.append) {
-                                is LoadState.Loading -> item { Box(Modifier.fillMaxWidth().padding(8.dp), Alignment.Center) { CircularProgressIndicator() } }
-                                is LoadState.Error -> item {
-                                    Box(Modifier.fillMaxWidth().padding(8.dp), Alignment.Center) {
-                                        TextButton(onClick = { products.retry() }) { Text("إعادة المحاولة") }
+                                        )
                                     }
                                 }
-                                else -> {}
+                                when (products.loadState.append) {
+                                    is LoadState.Loading -> item { Box(Modifier.fillMaxWidth().padding(8.dp), Alignment.Center) { CircularProgressIndicator() } }
+                                    is LoadState.Error -> item {
+                                        Box(Modifier.fillMaxWidth().padding(8.dp), Alignment.Center) {
+                                            TextButton(onClick = { products.retry() }) { Text("إعادة المحاولة") }
+                                        }
+                                    }
+                                    else -> {}
+                                }
                             }
                         }
                     }
-                }
-            }
+                } // end when
+            } // end PullToRefreshBox
         }
     }
 }

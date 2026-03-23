@@ -85,7 +85,7 @@ interface InventoryApiService {
     // Movements
     @GET("api/movements")
     suspend fun getMovements(
-        @Query("type") type: String? = null,
+        @Query("movement_type") type: String? = null,
         @Query("product_id") productId: Int? = null,
         @Query("warehouse_id") warehouseId: Int? = null,
         @Query("from_date") fromDate: String? = null,
@@ -176,6 +176,6 @@ interface InventoryApiService {
     @GET("api/invoices/{id}")
     suspend fun getInvoice(@Path("id") id: Int): InvoiceDto
 
-    @GET("api/invoices/number/{invoiceNumber}")
+    @GET("api/invoices/by-number/{invoiceNumber}")
     suspend fun getInvoiceByNumber(@Path("invoiceNumber") invoiceNumber: String): InvoiceDto
 }

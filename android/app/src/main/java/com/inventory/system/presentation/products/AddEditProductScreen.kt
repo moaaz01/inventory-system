@@ -1,5 +1,9 @@
 package com.inventory.system.presentation.products
 
+import android.graphics.Bitmap
+import android.graphics.Color
+import android.os.Environment
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -10,9 +14,29 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import com.inventory.system.domain.model.Unit as InventoryUnit
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.MultiFormatWriter
+import java.io.File
+import java.io.FileOutputStream
+
+fun generateBarcodeImage(sku: String, width: Int = 400, height: Int = 150): Bitmap? {
+    return try {
+        val writer = MultiFormatWriter()
+        val bitMatrix = writer.encode(sku, BarcodeFormat.CODE_128, width, height)
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        for (x in 0 until width) {
+            for (y in 0 until height) {
+                bitmap.setPixel(x, y, if (bitMatrix[x, y]) Color.BLACK else Color.WHITE)
+            }
+        }
+        bitmap
+    } catch (e: Exception) { null }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,6 +48,7 @@ fun AddEditProductScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isEdit = productId != null
+    val context = LocalContext.current
 
     var sku by remember { mutableStateOf(initialSku ?: "") }
     var name by remember { mutableStateOf("") }
@@ -39,6 +64,10 @@ fun AddEditProductScreen(
     var selectedCurrency by remember { mutableStateOf("USD") }
     var currencyExpanded by remember { mutableStateOf(false) }
     val currencies = listOf("USD", "SYP", "TRY")
+
+    // Barcode dialog state
+    var showBarcodeDialog by remember { mutableStateOf(false) }
+    var barcodeBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
     // Sync generated SKU from ViewModel
     LaunchedEffect(uiState.generatedSku) {
@@ -70,6 +99,45 @@ fun AddEditProductScreen(
         if (uiState.actionSuccess) {
             viewModel.clearActionState()
             onNavigateBack()
+        }
+    }
+
+    // Barcode dialog
+    if (showBarcodeDialog) {
+        if (barcodeBitmap == null && sku.isNotBlank()) {
+            barcodeBitmap = generateBarcodeImage(sku)
+        }
+        barcodeBitmap?.let { bmp ->
+            AlertDialog(
+                onDismissRequest = { showBarcodeDialog = false; barcodeBitmap = null },
+                title = { Text("باركود المنتج: $sku") },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Image(
+                            bitmap = bmp.asImageBitmap(),
+                            contentDescription = "باركود",
+                            modifier = Modifier.fillMaxWidth().height(120.dp)
+                        )
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        // Save barcode image
+                        try {
+                            val dir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+                            val file = File(dir, "barcode_${sku}.png")
+                            FileOutputStream(file).use { out ->
+                                bmp.compress(Bitmap.CompressFormat.PNG, 100, out)
+                            }
+                        } catch (_: Exception) {}
+                        showBarcodeDialog = false
+                        barcodeBitmap = null
+                    }) { Text("حفظ") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showBarcodeDialog = false; barcodeBitmap = null }) { Text("إغلاق") }
+                }
+            )
         }
     }
 
@@ -111,6 +179,21 @@ fun AddEditProductScreen(
                     }
                 }
             )
+
+            // Barcode generate button (shown when SKU is available)
+            if (sku.isNotBlank()) {
+                OutlinedButton(
+                    onClick = {
+                        barcodeBitmap = null
+                        showBarcodeDialog = true
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.QrCode, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("إنشاء باركود 📷")
+                }
+            }
 
             OutlinedTextField(value = name, onValueChange = { name = it },
                 label = { Text("اسم المنتج") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
@@ -221,3 +304,4 @@ fun AddEditProductScreen(
         }
     }
 }
+

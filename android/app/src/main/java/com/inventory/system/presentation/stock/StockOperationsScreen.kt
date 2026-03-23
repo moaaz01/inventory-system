@@ -4,8 +4,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -98,6 +101,15 @@ fun IssueTab(uiState: StockUiState, onSubmit: (Int, Int, Int, String?) -> Unit) 
     var productExpanded by remember { mutableStateOf(false) }
     var warehouseExpanded by remember { mutableStateOf(false) }
 
+    // Available stock for selected product+warehouse
+    val availableStock = remember(selectedProduct, selectedWarehouse) {
+        if (selectedProduct != null && selectedWarehouse != null) {
+            selectedProduct!!.stockInfo.find { it.warehouseId == selectedWarehouse!!.id }?.quantity ?: 0
+        } else null
+    }
+    val requestedQty = quantity.toIntOrNull() ?: 0
+    val isInsufficientStock = availableStock != null && requestedQty > availableStock
+
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("صرف مخزون", style = MaterialTheme.typography.titleMedium)
 
@@ -107,15 +119,47 @@ fun IssueTab(uiState: StockUiState, onSubmit: (Int, Int, Int, String?) -> Unit) 
         WarehouseDropdown(warehouses = uiState.warehouses, selected = selectedWarehouse, expanded = warehouseExpanded,
             onExpandedChange = { warehouseExpanded = it }, onSelect = { selectedWarehouse = it; warehouseExpanded = false })
 
+        // Show available stock info
+        if (availableStock != null) {
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = if (availableStock <= 0)
+                        MaterialTheme.colorScheme.errorContainer
+                    else
+                        MaterialTheme.colorScheme.secondaryContainer
+                )
+            ) {
+                Row(
+                    modifier = Modifier.padding(10.dp).fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        if (availableStock <= 0) Icons.Default.Warning else Icons.Default.Inventory,
+                        contentDescription = null,
+                        tint = if (availableStock <= 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.secondary
+                    )
+                    Text(
+                        "المخزون المتاح: $availableStock",
+                        color = if (availableStock <= 0) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                }
+            }
+        }
+
         OutlinedTextField(value = quantity, onValueChange = { quantity = it }, label = { Text("الكمية") },
-            modifier = Modifier.fillMaxWidth(), singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+            modifier = Modifier.fillMaxWidth(), singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            isError = isInsufficientStock,
+            supportingText = if (isInsufficientStock) {{ Text("⚠️ الكمية المطلوبة ($requestedQty) تتجاوز المخزون المتاح ($availableStock)", color = MaterialTheme.colorScheme.error) }} else null
+        )
 
         OutlinedTextField(value = refNumber, onValueChange = { refNumber = it }, label = { Text("رقم المرجع") },
             modifier = Modifier.fillMaxWidth(), singleLine = true)
 
         Button(
             onClick = { onSubmit(selectedProduct!!.id, selectedWarehouse!!.id, quantity.toInt(), refNumber.ifBlank { null }) },
-            enabled = !uiState.isLoading && selectedProduct != null && selectedWarehouse != null && quantity.toIntOrNull() != null && quantity.toInt() > 0,
+            enabled = !uiState.isLoading && selectedProduct != null && selectedWarehouse != null && quantity.toIntOrNull() != null && quantity.toInt() > 0 && !isInsufficientStock,
             modifier = Modifier.fillMaxWidth()
         ) {
             if (uiState.isLoading) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
