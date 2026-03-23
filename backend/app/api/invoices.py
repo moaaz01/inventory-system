@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.invoice import Invoice, InvoiceItem
 from app.models.product import Product
+from app.models.stock import Stock
+from app.models.movement import StockMovement
 from app.schemas.invoice import InvoiceCreate, InvoiceResponse, InvoiceItemResponse
 from app.api.deps import get_current_user
 from app.models.user import User
@@ -66,6 +68,27 @@ def create_invoice(data: InvoiceCreate, db: Session = Depends(get_db), user: Use
         )
         db.add(invoice_item)
 
+        # Deduct stock: pick the warehouse with the most available quantity
+        if item.product_id:
+            stock_entry = (
+                db.query(Stock)
+                .filter(Stock.product_id == item.product_id, Stock.quantity > 0)
+                .order_by(Stock.quantity.desc())
+                .first()
+            )
+            if stock_entry:
+                qty_int = int(item.quantity)
+                stock_entry.quantity = max(0, stock_entry.quantity - qty_int)
+                db.add(StockMovement(
+                    product_id=item.product_id,
+                    warehouse_id=stock_entry.warehouse_id,
+                    movement_type="issue",
+                    quantity=qty_int,
+                    reference_number=invoice.invoice_number,
+                    notes=f"فاتورة مبيعات - {invoice.invoice_number}",
+                    user_id=user.id,
+                ))
+
     db.commit()
     db.refresh(invoice)
     return invoice
@@ -82,4 +105,41 @@ def get_invoice(invoice_id: int, db: Session = Depends(get_db), _: User = Depend
     invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
     if not invoice:
         raise HTTPException(404, "Invoice not found")
+    return invoice
+
+@router.post("/{invoice_id}/cancel", response_model=InvoiceResponse)
+def cancel_invoice(invoice_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
+    if not invoice:
+        raise HTTPException(404, "Invoice not found")
+    if invoice.status == "cancelled":
+        raise HTTPException(400, "Invoice already cancelled")
+
+    invoice.status = "cancelled"
+
+    # Restore stock for each item
+    for item in invoice.items:
+        if not item.product_id:
+            continue
+        stock_entry = (
+            db.query(Stock)
+            .filter(Stock.product_id == item.product_id)
+            .order_by(Stock.quantity.desc())
+            .first()
+        )
+        if stock_entry:
+            qty_int = int(item.quantity)
+            stock_entry.quantity += qty_int
+            db.add(StockMovement(
+                product_id=item.product_id,
+                warehouse_id=stock_entry.warehouse_id,
+                movement_type="receipt",
+                quantity=qty_int,
+                reference_number=invoice.invoice_number,
+                notes=f"إلغاء فاتورة - {invoice.invoice_number}",
+                user_id=user.id,
+            ))
+
+    db.commit()
+    db.refresh(invoice)
     return invoice

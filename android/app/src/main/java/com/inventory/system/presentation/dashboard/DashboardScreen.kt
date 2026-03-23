@@ -23,6 +23,7 @@ fun DashboardScreen(
     onLogout: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToBarcodeScanner: () -> Unit = {},
+    onNavigateToCashier: () -> Unit = {},
     viewModel: DashboardViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
@@ -58,6 +59,7 @@ fun DashboardScreen(
             )
             uiState.stats != null -> DashboardContent(
                 stats = uiState.stats!!,
+                onNavigateToCashier = onNavigateToCashier,
                 modifier = Modifier.padding(padding)
             )
         }
@@ -65,7 +67,7 @@ fun DashboardScreen(
 }
 
 @Composable
-fun DashboardContent(stats: DashboardStats, modifier: Modifier = Modifier) {
+fun DashboardContent(stats: DashboardStats, onNavigateToCashier: () -> Unit = {}, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -74,6 +76,21 @@ fun DashboardContent(stats: DashboardStats, modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text("نظرة عامة", style = MaterialTheme.typography.titleLarge)
+
+        // Cashier button — prominent, full-width
+        Button(
+            onClick = onNavigateToCashier,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary
+            )
+        ) {
+            Icon(Icons.Default.PointOfSale, contentDescription = null, modifier = Modifier.size(24.dp))
+            Spacer(Modifier.width(8.dp))
+            Text("الكاشير 🛒", style = MaterialTheme.typography.titleMedium)
+        }
 
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             StatCard(

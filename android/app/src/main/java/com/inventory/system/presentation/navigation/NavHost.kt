@@ -233,7 +233,8 @@ fun MainScreen(
                 DashboardScreen(
                     onLogout = onNavigateToLogin,
                     onNavigateToSettings = onNavigateToSettings,
-                    onNavigateToBarcodeScanner = onNavigateToBarcodeScanner
+                    onNavigateToBarcodeScanner = onNavigateToBarcodeScanner,
+                    onNavigateToCashier = onNavigateToCashier
                 )
             }
             composable(Screen.Products.route) {
