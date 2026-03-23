@@ -1,6 +1,8 @@
 package com.inventory.system.presentation.categories
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -119,6 +121,22 @@ fun CategoriesScreen(
     var editingCategory by remember { mutableStateOf<Category?>(null) }
     var deleteTarget by remember { mutableStateOf<Category?>(null) }
 
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(uiState.actionError) {
+        uiState.actionError?.let { err ->
+            snackbarHostState.showSnackbar(err)
+            viewModel.clearActionState()
+        }
+    }
+
+    LaunchedEffect(uiState.actionSuccess) {
+        if (uiState.actionSuccess) {
+            snackbarHostState.showSnackbar("تم بنجاح")
+            viewModel.clearActionState()
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -135,50 +153,49 @@ fun CategoriesScreen(
             FloatingActionButton(onClick = { showAddDialog = true }) {
                 Icon(Icons.Default.Add, contentDescription = "إضافة فئة")
             }
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        if (uiState.isLoading && uiState.categories.isEmpty()) {
-            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-        } else if (uiState.error != null && uiState.categories.isEmpty()) {
-            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(uiState.error!!, color = MaterialTheme.colorScheme.error)
-                    Spacer(Modifier.height(8.dp))
-                    Button(onClick = viewModel::loadCategories) { Text("إعادة المحاولة") }
+        when {
+            uiState.isLoading && uiState.categories.isEmpty() -> {
+                Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
                 }
             }
-        } else if (uiState.categories.isEmpty()) {
-            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text("لا توجد فئات", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            uiState.error != null && uiState.categories.isEmpty() -> {
+                Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(uiState.error!!, color = MaterialTheme.colorScheme.error)
+                        Spacer(Modifier.height(8.dp))
+                        Button(onClick = viewModel::loadCategories) { Text("إعادة المحاولة") }
+                    }
+                }
             }
-        } else {
-            LazyColumn(Modifier.fillMaxSize().padding(padding)) {
-                items(uiState.categories, key = { it.id }) { cat ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
-                    ) {
-                        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Category, null, tint = MaterialTheme.colorScheme.primary)
-                            Spacer(Modifier.width(12.dp))
-                            Text(cat.name, Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
-                            IconButton(onClick = { editingCategory = cat }) {
-                                Icon(Icons.Default.Edit, contentDescription = "تعديل")
-                            }
-                            IconButton(onClick = { deleteTarget = cat }) {
-                                Icon(Icons.Default.Delete, contentDescription = "حذف", tint = MaterialTheme.colorScheme.error)
+            uiState.categories.isEmpty() -> {
+                Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                    Text("لا توجد فئات", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            else -> {
+                LazyColumn(Modifier.fillMaxSize().padding(padding)) {
+                    items(uiState.categories, key = { it.id }) { cat ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
+                        ) {
+                            Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Category, null, tint = MaterialTheme.colorScheme.primary)
+                                Spacer(Modifier.width(12.dp))
+                                Text(cat.name, Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
+                                IconButton(onClick = { editingCategory = cat }) {
+                                    Icon(Icons.Default.Edit, contentDescription = "تعديل")
+                                }
+                                IconButton(onClick = { deleteTarget = cat }) {
+                                    Icon(Icons.Default.Delete, contentDescription = "حذف", tint = MaterialTheme.colorScheme.error)
+                                }
                             }
                         }
                     }
                 }
-            }
-        }
-
-        uiState.actionError?.let { err ->
-            LaunchedEffect(err) {
-                // show snackbar or just clear
-                viewModel.clearActionState()
             }
         }
     }
