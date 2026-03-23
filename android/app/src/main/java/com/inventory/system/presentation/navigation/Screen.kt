@@ -55,5 +55,6 @@ enum class BottomNavItem(
     PRODUCTS(Screen.Products, "المنتجات", Icons.Default.Inventory),
     WAREHOUSES(Screen.Warehouses, "المستودعات", Icons.Default.Warehouse),
     STOCK(Screen.StockOperations, "العمليات", Icons.Default.SwapHoriz),
+    CATEGORIES(Screen.Categories, "الفئات", Icons.Default.Category),
     REPORTS(Screen.Reports, "التقارير", Icons.Default.Assessment)
 }

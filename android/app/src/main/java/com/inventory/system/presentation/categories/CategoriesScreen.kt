@@ -236,18 +236,34 @@ fun CategoryDialog(
     onDismiss: () -> Unit
 ) {
     var name by remember { mutableStateOf(initialName) }
+    val isEnglishOnly = remember(name) {
+        name.isEmpty() || name.matches(Regex("""^[A-Za-z0-9\s\-_]+$"""))
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {
-            OutlinedTextField(
-                value = name, onValueChange = { name = it },
-                label = { Text("اسم الفئة") },
-                modifier = Modifier.fillMaxWidth(), singleLine = true
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                OutlinedTextField(
+                    value = name, onValueChange = { name = it },
+                    label = { Text("Category Name (English only)") },
+                    modifier = Modifier.fillMaxWidth(), singleLine = true,
+                    isError = !isEnglishOnly,
+                    supportingText = {
+                        if (!isEnglishOnly) {
+                            Text("English letters, numbers, spaces only", color = MaterialTheme.colorScheme.error)
+                        } else {
+                            Text("Letters, numbers, spaces, - and _ are allowed")
+                        }
+                    }
+                )
+            }
         },
         confirmButton = {
-            TextButton(onClick = { if (name.isNotBlank()) onConfirm(name) }, enabled = name.isNotBlank()) {
+            TextButton(
+                onClick = { if (name.isNotBlank() && isEnglishOnly) onConfirm(name) },
+                enabled = name.isNotBlank() && isEnglishOnly
+            ) {
                 Text("حفظ")
             }
         },

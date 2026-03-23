@@ -28,6 +28,10 @@ def list_categories(db: Session = Depends(get_db), _: User = Depends(get_current
 
 @router.post("", response_model=CategoryResponse, status_code=201)
 def create_category(data: CategoryCreate, db: Session = Depends(get_db), _: User = Depends(require_admin)):
+    # Validate English-only names (SKU prefix uses category name)
+    import re
+    if not re.match(r'^[A-Za-z0-9\s\-_]+$', data.name):
+        raise HTTPException(400, "Category name must be in English only (letters, numbers, spaces, hyphens, underscores)")
     cat = Category(**data.model_dump())
     db.add(cat)
     db.commit()
@@ -37,6 +41,9 @@ def create_category(data: CategoryCreate, db: Session = Depends(get_db), _: User
 
 @router.put("/{id}", response_model=CategoryResponse)
 def update_category(id: int, data: CategoryUpdate, db: Session = Depends(get_db), _: User = Depends(require_admin)):
+    import re
+    if data.name is not None and not re.match(r'^[A-Za-z0-9\s\-_]+$', data.name):
+        raise HTTPException(400, "Category name must be in English only (letters, numbers, spaces, hyphens, underscores)")
     cat = db.query(Category).filter(Category.id == id).first()
     if not cat:
         raise HTTPException(404, "Category not found")
