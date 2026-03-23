@@ -30,6 +30,7 @@ data class CashierUiState(
     val subtotal: Double = 0.0,
     val discount: Double = 0.0,
     val total: Double = 0.0,
+    val customerName: String = "",
     val lastCreatedInvoiceId: Int? = null,
     val error: String? = null
 )
@@ -101,13 +102,18 @@ class CashierViewModel @Inject constructor(
         _uiState.update { it.copy(cartItems = items, subtotal = subtotal, discount = discount, total = total, isLoading = false) }
     }
 
+    fun updateCustomerName(name: String) {
+        _uiState.update { it.copy(customerName = name) }
+    }
+
     fun createInvoice() {
         viewModelScope.launch {
             val state = _uiState.value
             if (state.cartItems.isEmpty()) return@launch
             _uiState.update { it.copy(isLoading = true, error = null) }
             val cartItems = state.cartItems.map { CartItem(it.productId, it.productName, it.sku, it.quantity, it.unitPrice) }
-            val result = invoiceRepository.createInvoice(null, state.discount, cartItems)
+            val customerName = state.customerName.trim().ifBlank { null }
+            val result = invoiceRepository.createInvoice(customerName, state.discount, cartItems)
             when (result) {
                 is Result.Success -> {
                     _uiState.update { CashierUiState(lastCreatedInvoiceId = result.data.id) }

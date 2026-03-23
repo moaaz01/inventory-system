@@ -217,7 +217,7 @@ fun MainScreen(
                         icon = {
                             Icon(
                                 item.icon,
-                                contentDescription = item.labelRes,
+                                contentDescription = item.contentDesc,
                                 tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         },
@@ -279,6 +279,9 @@ fun MainScreen(
             }
             composable(Screen.Reports.route) {
                 ReportsScreen()
+            }
+            composable(Screen.Categories.route) {
+                CategoriesScreen(onNavigateBack = { navController.popBackStack() })
             }
         }
     }

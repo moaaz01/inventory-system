@@ -8,6 +8,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -17,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -132,10 +134,17 @@ fun CashierScreen(
                         OutlinedTextField(
                             value = manualInput,
                             onValueChange = { manualInput = it },
-                            label = { Text("أدخل رمز المنتج يدوياً") },
+                            label = { Text("باركود / رمز المنتج") },
+                            placeholder = { Text("مسح بجهاز خارجي أو كتابة يدوياً") },
                             modifier = Modifier.weight(1f),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Done),
+                            keyboardActions = KeyboardActions(onDone = {
+                                if (manualInput.isNotBlank()) {
+                                    viewModel.addBySku(manualInput.trim())
+                                    manualInput = ""
+                                }
+                            })
                         )
                         IconButton(
                             onClick = {
@@ -231,6 +240,18 @@ fun CashierScreen(
                     }
 
                     Spacer(Modifier.height(12.dp))
+
+                    // Customer name field
+                    OutlinedTextField(
+                        value = uiState.customerName,
+                        onValueChange = { viewModel.updateCustomerName(it) },
+                        label = { Text("اسم العميل (اختياري)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        leadingIcon = { Icon(Icons.Default.Person, null) }
+                    )
+
+                    Spacer(Modifier.height(8.dp))
 
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedButton(

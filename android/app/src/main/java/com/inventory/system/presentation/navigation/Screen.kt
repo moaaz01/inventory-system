@@ -49,12 +49,12 @@ sealed class Screen(val route: String) {
 enum class BottomNavItem(
     val screen: Screen,
     val labelRes: String,
-    val icon: ImageVector
+    val icon: ImageVector,
+    val contentDesc: String
 ) {
-    DASHBOARD(Screen.Dashboard, "لوحة التحكم", Icons.Default.Dashboard),
-    PRODUCTS(Screen.Products, "المنتجات", Icons.Default.Inventory),
-    WAREHOUSES(Screen.Warehouses, "المستودعات", Icons.Default.Warehouse),
-    STOCK(Screen.StockOperations, "العمليات", Icons.Default.SwapHoriz),
-    CATEGORIES(Screen.Categories, "الفئات", Icons.Default.Category),
-    REPORTS(Screen.Reports, "التقارير", Icons.Default.Assessment)
+    DASHBOARD(Screen.Dashboard, "الرئيسية", Icons.Default.Dashboard, "لوحة التحكم"),
+    PRODUCTS(Screen.Products, "المنتجات", Icons.Default.Inventory, "قائمة المنتجات"),
+    CATEGORIES(Screen.Categories, "الفئات", Icons.Default.Category, "تصفح الفئات"),
+    WAREHOUSES(Screen.Warehouses, "المستودعات", Icons.Default.Warehouse, "إدارة المستودعات"),
+    STOCK(Screen.StockOperations, "العمليات", Icons.Default.SwapHoriz, "عمليات المخزون")
 }
