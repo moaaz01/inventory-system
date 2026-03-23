@@ -196,3 +196,37 @@ data class UpdateUserRequest(
     val role: String? = null,
     @com.google.gson.annotations.SerializedName("is_active") val isActive: Boolean? = null
 )
+
+data class InvoiceItemDto(
+    val id: Int,
+    @SerializedName("product_id") val product_id: Int,
+    @SerializedName("product_name") val product_name: String,
+    @SerializedName("product_sku") val product_sku: String,
+    val quantity: Double,
+    @SerializedName("unit_price") val unit_price: Double,
+    @SerializedName("total_price") val total_price: Double
+)
+
+data class InvoiceDto(
+    val id: Int,
+    @SerializedName("invoice_number") val invoice_number: String,
+    @SerializedName("customer_name") val customer_name: String?,
+    val subtotal: Double,
+    val discount: Double,
+    val total: Double,
+    val status: String,
+    @SerializedName("created_at") val created_at: String,
+    val items: List<InvoiceItemDto>
+)
+
+data class InvoiceItemCreateDto(
+    @SerializedName("product_id") val product_id: Int,
+    val quantity: Double,
+    @SerializedName("unit_price") val unit_price: Double
+)
+
+data class CreateInvoiceDto(
+    @SerializedName("customer_name") val customer_name: String?,
+    val discount: Double = 0.0,
+    val items: List<InvoiceItemCreateDto>
+)

@@ -85,6 +85,36 @@ data class InventoryReportItem(
 
 data class NextSku(val sku: String, val prefix: String)
 
+data class CartItem(
+    val productId: Int,
+    val productName: String,
+    val sku: String,
+    val quantity: Double,
+    val unitPrice: Double
+)
+
+data class InvoiceItem(
+    val id: Int,
+    val productId: Int,
+    val productName: String,
+    val productSku: String,
+    val quantity: Double,
+    val unitPrice: Double,
+    val totalPrice: Double
+)
+
+data class Invoice(
+    val id: Int,
+    val invoiceNumber: String,
+    val customerName: String?,
+    val subtotal: Double,
+    val discount: Double,
+    val total: Double,
+    val status: String,
+    val createdAt: String,
+    val items: List<InvoiceItem>
+)
+
 sealed class Result<out T> {
     data class Success<T>(val data: T) : Result<T>()
     data class Error(val message: String) : Result<Nothing>()

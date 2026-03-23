@@ -159,4 +159,23 @@ interface InventoryApiService {
 
     @DELETE("api/users/{id}")
     suspend fun deleteUser(@Path("id") id: Int): Response<Unit>
+
+    // Invoices
+    @POST("api/invoices")
+    suspend fun createInvoice(@Body data: CreateInvoiceDto): InvoiceDto
+
+    @GET("api/invoices")
+    suspend fun getInvoices(
+        @Query("skip") skip: Int = 0,
+        @Query("limit") limit: Int = 50,
+        @Query("start_date") startDate: String? = null,
+        @Query("end_date") endDate: String? = null,
+        @Query("search") search: String? = null
+    ): List<InvoiceDto>
+
+    @GET("api/invoices/{id}")
+    suspend fun getInvoice(@Path("id") id: Int): InvoiceDto
+
+    @GET("api/invoices/number/{invoiceNumber}")
+    suspend fun getInvoiceByNumber(@Path("invoiceNumber") invoiceNumber: String): InvoiceDto
 }

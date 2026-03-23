@@ -134,4 +134,9 @@ class ProductsViewModel @Inject constructor(
             }
         }
     }
+
+    fun downloadBarcode(sku: String) {
+        // Barcode generation - placeholder; ZXing is used via Intent in the scanner screen
+        _uiState.update { it.copy(generatedSku = sku) }
+    }
 }

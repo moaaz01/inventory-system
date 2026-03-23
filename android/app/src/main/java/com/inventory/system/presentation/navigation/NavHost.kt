@@ -24,6 +24,9 @@ import com.inventory.system.presentation.warehouses.AddEditWarehouseScreen
 import com.inventory.system.presentation.warehouses.WarehouseDetailScreen
 import com.inventory.system.presentation.warehouses.WarehousesScreen
 import com.inventory.system.presentation.settings.SettingsScreen
+import com.inventory.system.presentation.pos.CashierScreen
+import com.inventory.system.presentation.pos.InvoiceHistoryScreen
+import com.inventory.system.presentation.pos.InvoiceDetailScreen
 
 @Composable
 fun InventoryNavHost() {
@@ -76,7 +79,8 @@ fun InventoryNavHost() {
                 onNavigateToEditProduct = { id -> navController.navigate(Screen.AddEditProduct.createRoute(id)) },
                 onNavigateToWarehouseDetail = { id -> navController.navigate(Screen.WarehouseDetail.createRoute(id)) },
                 onNavigateToAddWarehouse = { navController.navigate(Screen.AddEditWarehouse.createRoute()) },
-                onNavigateToBarcodeScanner = { navController.navigate(Screen.BarcodeScanner.route) }
+                onNavigateToBarcodeScanner = { navController.navigate(Screen.BarcodeScanner.route) },
+                onNavigateToCashier = { navController.navigate(Screen.Cashier.route) }
             )
         }
 
@@ -158,6 +162,29 @@ fun InventoryNavHost() {
         composable(route = Screen.ExportImport.route) {
             ExportImportScreen(onNavigateBack = { navController.popBackStack() })
         }
+
+        composable(route = Screen.Cashier.route) {
+            CashierScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToInvoice = { id -> navController.navigate(Screen.InvoiceDetail.createRoute(id)) },
+                onNavigateToInvoiceHistory = { navController.navigate(Screen.InvoiceHistory.route) }
+            )
+        }
+
+        composable(route = Screen.InvoiceHistory.route) {
+            InvoiceHistoryScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToInvoice = { id -> navController.navigate(Screen.InvoiceDetail.createRoute(id)) }
+            )
+        }
+
+        composable(route = Screen.InvoiceDetail.route) { backStackEntry ->
+            val invoiceId = backStackEntry.arguments?.getString("invoiceId")?.toIntOrNull() ?: return@composable
+            InvoiceDetailScreen(
+                invoiceId = invoiceId,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
     }
 }
 
@@ -170,7 +197,8 @@ fun MainScreen(
     onNavigateToEditProduct: (Int) -> Unit,
     onNavigateToWarehouseDetail: (Int) -> Unit,
     onNavigateToAddWarehouse: () -> Unit = {},
-    onNavigateToBarcodeScanner: () -> Unit = {}
+    onNavigateToBarcodeScanner: () -> Unit = {},
+    onNavigateToCashier: () -> Unit = {}
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -214,6 +242,11 @@ fun MainScreen(
                     onAddProduct = onNavigateToAddProduct,
                     onBarcodeScanner = onNavigateToBarcodeScanner
                 )
+            }
+            composable(Screen.Cashier.route) {
+                // The full Cashier screen is accessible from top-level NavHost
+                // Here we just redirect to top-level Cashier
+                LaunchedEffect(Unit) { onNavigateToCashier() }
             }
             composable(Screen.Warehouses.route) {
                 WarehousesScreen(

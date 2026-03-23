@@ -81,3 +81,9 @@ interface ExportImportRepository {
     suspend fun importProducts(fileBytes: ByteArray, fileName: String): Result<com.inventory.system.data.remote.dto.ImportResult>
     suspend fun importWarehouses(fileBytes: ByteArray, fileName: String): Result<com.inventory.system.data.remote.dto.ImportResult>
 }
+
+interface InvoiceRepository {
+    suspend fun createInvoice(customerName: String?, discount: Double, items: List<com.inventory.system.domain.model.CartItem>): Result<com.inventory.system.domain.model.Invoice>
+    suspend fun getInvoices(skip: Int = 0, limit: Int = 50, startDate: String? = null, endDate: String? = null, search: String? = null): Result<List<com.inventory.system.domain.model.Invoice>>
+    suspend fun getInvoice(id: Int): Result<com.inventory.system.domain.model.Invoice>
+}

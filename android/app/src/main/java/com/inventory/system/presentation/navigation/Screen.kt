@@ -38,6 +38,12 @@ sealed class Screen(val route: String) {
     object AddEditProductWithSku : Screen("add_edit_product?productId={productId}&sku={sku}") {
         fun createRouteWithSku(sku: String) = "add_edit_product?sku=$sku"
     }
+
+    object Cashier : Screen("cashier")
+    object InvoiceHistory : Screen("invoice_history")
+    object InvoiceDetail : Screen("invoice_detail/{invoiceId}") {
+        fun createRoute(invoiceId: Int) = "invoice_detail/$invoiceId"
+    }
 }
 
 enum class BottomNavItem(
@@ -47,6 +53,7 @@ enum class BottomNavItem(
 ) {
     DASHBOARD(Screen.Dashboard, "لوحة التحكم", Icons.Default.Dashboard),
     PRODUCTS(Screen.Products, "المنتجات", Icons.Default.Inventory),
+    CASHIER(Screen.Cashier, "الكاشير", Icons.Default.ShoppingCart),
     WAREHOUSES(Screen.Warehouses, "المستودعات", Icons.Default.Warehouse),
     STOCK(Screen.StockOperations, "العمليات", Icons.Default.SwapHoriz),
     REPORTS(Screen.Reports, "التقارير", Icons.Default.Assessment)

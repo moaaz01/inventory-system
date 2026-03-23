@@ -41,4 +41,7 @@ abstract class RepositoryModule {
 
     @Binds @Singleton
     abstract fun bindExportImportRepository(impl: ExportImportRepositoryImpl): ExportImportRepository
+
+    @Binds @Singleton
+    abstract fun bindInvoiceRepository(impl: InvoiceRepositoryImpl): InvoiceRepository
 }
