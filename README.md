@@ -82,6 +82,11 @@
 
 ## 📁 هيكل المشروع
 
+> **ملاحظة:** المجلدات التالية تُنشأ تلقائياً عند التشغيل ولا تتضمن في الـ repo:
+> - `backend/venv/` — بيئة Python (تنشأ بـ `python3 -m venv venv`)
+> - `admin/node_modules/` — حزم npm (تنشأ بـ `npm install`)
+> - `android/app/build/` — ملفات بناء Android (تنشأ بـ `./gradlew build`)
+
 ```
 inventory-system/
 ├── backend/                    # FastAPI Backend
@@ -138,27 +143,39 @@ inventory-system/
 
 ---
 
+## 📥 التحميل والاستنساخ
+
+```bash
+# استنساخ المشروع
+git clone https://github.com/moaaz01/inventory-system.git
+cd inventory-system
+```
+
+> ⚠️ **ملاحظة:** المشروع لا يتضمن بيئات التشغيل (node_modules, .venv, build) لتقليل الحجم.
+> يتم تحميلها تلقائياً عند التشغيل عبر الأوامر أدناه.
+
+---
+
 ## 📋 المتطلبات
 
 ### متطلبات عامة
 
-| الأداة | الإصدار المطلوب | الغرض |
-|--------|----------------|-------|
-| **Python** | 3.11+ | Backend |
-| **Node.js** | 18+ | Admin Dashboard |
-| **npm** | 9+ | إدارة الحزم |
-| **PostgreSQL** | 14+ | قاعدة البيانات |
-| **Docker** | 24+ (اختياري) | حاويات |
-| **Git** | 2.30+ | إدارة المصادر |
+| الأداة | الإصدار المطلوب | التثبيت |
+|--------|----------------|---------|
+| **Python** | 3.11+ | `sudo apt install python3 python3-pip python3-venv` |
+| **Node.js** | 18+ | `sudo apt install nodejs npm` أو `nvm install 20` |
+| **npm** | 9+ | يأتي مع Node.js |
+| **PostgreSQL** | 14+ | `sudo apt install postgresql` أو Docker |
+| **Docker** | 24+ (اختياري) | `curl -fsSL https://get.docker.com \| sh` |
+| **Git** | 2.30+ | `sudo apt install git` |
 
 ### لتطوير Android إضافياً
 
-| الأداة | الإصدار | الغرض |
-|--------|---------|-------|
-| **Android Studio** | 2024+ | IDE |
-| **Kotlin** | 2.0+ | لغة التطوير |
-| **Gradle** | 8.x | Build System |
-| **JDK** | 17+ | Java Development |
+| الأداة | الإصدار | التثبيت |
+|--------|---------|---------|
+| **Android Studio** | 2024+ | [تحميل](https://developer.android.com/studio) |
+| **Kotlin** | 2.0+ | يأتي مع Android Studio |
+| **JDK** | 17+ | يأتي مع Android Studio |
 
 ---
 
@@ -171,21 +188,20 @@ inventory-system/
 git clone https://github.com/moaaz01/inventory-system.git
 cd inventory-system
 
-# 2. تشغيل Docker
-docker-compose up -d
+# 2. تشغيل قاعدة البيانات فقط عبر Docker
+docker-compose up -d postgres
 
-# 3. انتظر حتى تبدأ الخدمات
-docker-compose logs -f postgres
-# اضغط Ctrl+C عندما ترى "database system is ready"
-
-# 4. تشغيل Backend
+# 3. تحميل متطلبات Backend وتشغيله
 cd backend
-pip install -r requirements.txt
+python3 -m venv venv          # إنشاء بيئة افتراضية
+source venv/bin/activate      # تفعيل البيئة (Windows: venv\Scripts\activate)
+pip install -r requirements.txt   # ⬅️ تحميل الحزم
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 
-# 5. تشغيل Admin (terminal جديد)
-cd admin
-npm install
+# 4. تحميل متطلبات Admin وتشغيله (terminal جديد)
+cd ../admin
+npm install                   # ⬅️ تحميل الحزم (850MB تقريباً)
+cp .env.example .env.local    # إعداد متغيرات البيئة
 npm run dev
 ```
 
@@ -236,21 +252,17 @@ sudo apt install postgresql
 ```bash
 cd inventory-system/backend
 
-# إنشاء بيئة افتراضية
+# إنشاء بيئة افتراضية وتفعيلها
 python3 -m venv venv
+source venv/bin/activate      # Linux/macOS
+# venv\Scripts\activate       # Windows
 
-# تفعيل البيئة
-# Linux/macOS:
-source venv/bin/activate
-# Windows:
-venv\Scripts\activate
-
-# تثبيت المتطلبات
+# تحميل الحزم ⬅️
 pip install -r requirements.txt
 
 # إعداد متغيرات البيئة
 cp .env.example .env
-# عدّل .env حسب إعداداتك
+# عدّل .env حسب إعداداتك (DATABASE_URL, SECRET_KEY)
 
 # تشغيل
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
@@ -261,19 +273,33 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```bash
 cd inventory-system/admin
 
-# تثبيت المتطلبات
+# تحميل الحزم ⬅️ (يحتاج ~850MB)
 npm install
 
 # إعداد متغيرات البيئة
 cp .env.example .env.local
-# عدّل NEXT_PUBLIC_API_URL
+# عدّل NEXT_PUBLIC_API_URL=http://localhost:8000
 
-# تشغيل
+# تشغيل (تطوير)
 npm run dev
 
 # أو للإنتاج
-npm run build
-npm start
+npm run build && npm start
+```
+
+#### الخطوة 4: Android (اختياري)
+
+```bash
+# افتح المشروع في Android Studio
+# File → Open → inventory-system/android/
+
+# أو بناء من سطر الأوامر
+cd inventory-system/android
+chmod +x gradlew
+./gradlew assembleDebug
+
+# APK الناتج:
+# android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
 ---
